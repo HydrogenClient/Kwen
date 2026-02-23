@@ -18,17 +18,21 @@
 
     <header class="flex justify-between items-center pb-4 border-b border-slate-800">
         <h1 class="text-2xl font-black text-blue-500">KWEN</h1>
-        <input type="password" id="apiKey" placeholder="API Key" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-40">
+        <input type="password" id="apiKey" placeholder="API Key (if private)" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-40">
     </header>
 
     <div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
-        <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">System: Kwen-540M is ready. Format: ChatML (OpenML).</div>
+        <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
+            System: Kwen-540M is ready. Format: ChatML (OpenML).
+        </div>
     </div>
 
     <div class="relative mt-auto">
         <input type="text" id="userInput" placeholder="Ask anything..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500">
         <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
         </button>
     </div>
 
@@ -39,6 +43,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const apiKeyInput = document.getElementById('apiKey');
 
+        // Load saved API key
         apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
         function addMessage(text, isUser) {
@@ -54,9 +59,9 @@
             const prompt = userInput.value.trim();
             const key = apiKeyInput.value.trim();
 
-            if (!prompt || !key) return;
-            localStorage.setItem('kwen_key', key);
-            
+            if (!prompt) return;
+            if (key) localStorage.setItem('kwen_key', key);
+
             addMessage(prompt, true);
             userInput.value = "";
 
@@ -64,32 +69,37 @@
             thinking.classList.add("loading-pulse");
 
             try {
-                // REMOVED TIMEOUT: This will wait as long as the server needs
+                const headers = { 'Content-Type': 'application/json' };
+                if (key) headers['Authorization'] = `Bearer ${key}`;
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${key}`
-                    },
-                    body: JSON.stringify({ prompt: prompt })
+                    headers,
+                    body: JSON.stringify({ data: [prompt] }) // Correct format for Gradio Space
                 });
 
                 thinking.classList.remove("loading-pulse");
 
                 if (response.ok) {
                     const data = await response.json();
-                    thinking.textContent = data.response;
+                    // Gradio Spaces typically return { data: ["reply text"] }
+                    thinking.textContent = data.data?.[0] || "No response from API";
                 } else {
-                    thinking.textContent = "Error: API returned an error. Check logs.";
+                    const text = await response.text();
+                    thinking.textContent = "Error: API returned an error.";
+                    console.error("API Error:", text);
                 }
             } catch (error) {
-                thinking.textContent = "Network Error: The request was interrupted or the server took too long.";
+                thinking.classList.remove("loading-pulse");
+                thinking.textContent = "Network Error: Could not reach the server.";
                 console.error(error);
             }
         }
 
+        // Event listeners
         sendBtn.onclick = sendMessage;
         userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
     </script>
+
 </body>
 </html>

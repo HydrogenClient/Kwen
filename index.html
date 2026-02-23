@@ -8,179 +8,142 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        
-        body { 
-            background: radial-gradient(circle at top right, #1e293b, #0f172a); 
-            color: #e2e8f0; 
-            font-family: 'Inter', sans-serif;
-            margin: 0; 
-        }
-
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .chat-container { height: calc(100vh - 180px); scrollbar-width: thin; scrollbar-color: #334155 transparent; }
-        
-        .user-msg { 
-            background: linear-gradient(135deg, #3b82f6, #2563eb); 
-            align-self: flex-end; 
-            border-radius: 20px 20px 4px 20px;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-        }
-        
-        .ai-msg { 
-            background: rgba(30, 41, 59, 0.8); 
-            align-self: flex-start; 
-            border-radius: 20px 20px 20px 4px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
-
+        body { background: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .chat-container { height: calc(100vh - 160px); scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+        .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
+        .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); }
         code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
         pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; position: relative; overflow-x: auto; }
-        pre code { background: transparent; color: #f8fafc; padding: 0; }
-        
-        .copy-btn {
-            position: absolute; top: 8px; right: 8px;
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);
-            padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .copy-btn:hover { background: #3b82f6; color: white; }
-
-        .typing::after {
-            content: "●"; margin-left: 5px;
-            animation: pulse 1s infinite; color: #3b82f6;
-        }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; }
+        .sidebar { transition: all 0.3s ease; }
+        .tab-active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
+        .typing::after { content: "●"; margin-left: 5px; animation: pulse 1s infinite; color: #3b82f6; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
-<body class="flex flex-col h-screen max-w-4xl mx-auto px-4 py-2">
+<body class="flex h-screen">
 
-<header class="flex justify-between items-center py-4 px-2 border-b border-white/10">
-    <div class="flex items-center gap-3">
-        <div class="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/20">K</div>
-        <div>
-            <h1 class="text-xl font-extrabold tracking-tighter leading-none">KWEN</h1>
-            <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold">v1.5B</p>
-        </div>
+<aside id="sidebar" class="w-64 glass border-r border-white/10 flex flex-col sidebar shrink-0">
+    <div class="p-4 border-b border-white/10 flex flex-col gap-4">
+        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
+            <span>+</span> New Chat
+        </button>
     </div>
-    
-    <div class="flex items-center gap-2">
-        <button onclick="clearCache()" class="text-[10px] text-slate-500 hover:text-white uppercase font-bold mr-2 tracking-widest transition-colors">Clear Chat</button>
-        <div class="relative">
-            <input type="password" id="apiKey" placeholder="API Key" 
-                   class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-            <span id="keyBadge" class="hidden absolute -top-2 -right-1 text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">Default</span>
+    <div id="tabsList" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1">
         </div>
-        <a href="https://hydrogenclient.github.io/Kwen/dashboard" class="p-2 glass hover:bg-white/10 rounded-lg transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        </a>
+    <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center font-bold uppercase tracking-widest">
+        Kwen Foundation
     </div>
-</header>
+</aside>
 
-<main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-2">
-    </main>
+<div class="flex-1 flex flex-col relative">
+    <header class="flex justify-between items-center py-4 px-6 border-b border-white/10 glass">
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-extrabold tracking-tighter">KWEN <span class="text-blue-500">API</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <input type="password" id="apiKey" placeholder="API Key" class="glass px-4 py-2 rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none">
+            <a href="https://hydrogenclient.github.io/Kwen/dashboard" class="p-2 glass hover:bg-white/10 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </a>
+        </div>
+    </header>
 
-<footer class="pb-6 pt-2">
-    <div class="relative group">
-        <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"></div>
-        <div class="relative flex items-center glass rounded-2xl p-2">
-            <input type="text" id="userInput" placeholder="Ask Kwen anything..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
-            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95">
+    <main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-6">
+        </main>
+
+    <footer class="p-6">
+        <div class="max-w-4xl mx-auto relative flex items-center glass rounded-2xl p-2">
+            <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
+            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
         </div>
-    </div>
-</footer>
+    </footer>
+</div>
 
 <script>
 const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 
-// --- CHAT HISTORY STORAGE ---
-let messageHistory = []; 
+let chats = JSON.parse(localStorage.getItem('kwen_chats') || '[]');
+let currentChatId = localStorage.getItem('kwen_current_id') || null;
 
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
+const tabsList = document.getElementById('tabsList');
 const apiKeyInput = document.getElementById('apiKey');
-const keyBadge = document.getElementById('keyBadge');
 
 function init() {
-    // Load API Key
-    const savedKey = localStorage.getItem('kwen_key');
-    apiKeyInput.value = savedKey || DEFAULT_KEY;
-    if (!savedKey || savedKey === DEFAULT_KEY) keyBadge.classList.remove('hidden');
-
-    // Load Chat History from Cache
-    const cachedHistory = localStorage.getItem('kwen_chat_cache');
-    if (cachedHistory) {
-        messageHistory = JSON.parse(cachedHistory);
-        renderHistory();
+    apiKeyInput.value = localStorage.getItem('kwen_key') || DEFAULT_KEY;
+    if (chats.length === 0) {
+        createNewChat();
     } else {
-        // Initial Greeting if no history
-        addMessage("How can I help you today?", false, false);
+        renderTabs();
+        loadChat(currentChatId || chats[0].id);
     }
 }
 
-function renderHistory() {
+function createNewChat() {
+    const newId = Date.now().toString();
+    const newChat = { id: newId, title: "New Chat", history: [] };
+    chats.unshift(newChat);
+    save();
+    renderTabs();
+    loadChat(newId);
+}
+
+function loadChat(id) {
+    currentChatId = id;
+    localStorage.setItem('kwen_current_id', id);
+    renderTabs();
+    
     chatBox.innerHTML = '';
-    messageHistory.forEach(msg => {
-        const isUser = msg.startsWith("User: ");
-        const text = isUser ? msg.replace("User: ", "") : msg.replace("Assistant: ", "");
-        addMessage(text, isUser, false); // false = don't re-save to history array during render
-    });
-}
-
-function clearCache() {
-    if (confirm("Clear all chat history from this browser?")) {
-        messageHistory = [];
-        localStorage.removeItem('kwen_chat_cache');
-        chatBox.innerHTML = '';
-        addMessage("Chat history cleared. How can I help you?", false, false);
-    }
-}
-
-function updateFormatting() {
-    document.querySelectorAll('pre').forEach(block => {
-        if (!block.querySelector('.copy-btn')) {
-            const btn = document.createElement('button');
-            btn.className = 'copy-btn';
-            btn.innerText = 'COPY';
-            btn.onclick = () => {
-                navigator.clipboard.writeText(block.querySelector('code').innerText);
-                btn.innerText = 'COPIED!';
-                setTimeout(() => btn.innerText = 'COPY', 2000);
-            };
-            block.appendChild(btn);
-        }
-    });
-}
-
-function addMessage(text, isUser, shouldSave = true) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `px-5 py-4 max-w-[85%] shadow-lg ${isUser ? 'user-msg text-white' : 'ai-msg'}`;
+    const chat = chats.find(c => c.id === id);
     
-    if (isUser) {
-        msgDiv.textContent = text;
-        if (shouldSave) messageHistory.push(`User: ${text}`);
+    if (chat.history.length === 0) {
+        addMessageBubble("Hello! I am Kwen. How can I help you?", false);
     } else {
-        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p><div class="markdown-body">${marked.parse(text)}</div>`;
-        if (shouldSave) messageHistory.push(`Assistant: ${text}`);
+        chat.history.forEach(msg => {
+            const isUser = msg.startsWith("User: ");
+            addMessageBubble(isUser ? msg.replace("User: ", "") : msg.replace("Assistant: ", ""), isUser);
+        });
     }
-    
-    if (shouldSave) {
-        localStorage.setItem('kwen_chat_cache', JSON.stringify(messageHistory));
-    }
+}
 
+function renderTabs() {
+    tabsList.innerHTML = '';
+    chats.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-lg cursor-pointer text-sm truncate flex justify-between group transition-all ${chat.id === currentChatId ? 'tab-active' : 'hover:bg-white/5'}`;
+        div.innerHTML = `
+            <span onclick="loadChat('${chat.id}')" class="flex-1">${chat.title}</span>
+            <button onclick="deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-500">×</button>
+        `;
+        tabsList.appendChild(div);
+    });
+}
+
+function deleteChat(id) {
+    chats = chats.filter(c => c.id !== id);
+    if (currentChatId === id) currentChatId = chats[0]?.id || null;
+    save();
+    if (!currentChatId) createNewChat(); else { renderTabs(); loadChat(currentChatId); }
+}
+
+function save() {
+    localStorage.setItem('kwen_chats', JSON.stringify(chats));
+}
+
+function addMessageBubble(text, isUser) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `px-5 py-3 max-w-[85%] shadow-lg ${isUser ? 'user-msg' : 'ai-msg'}`;
+    if (isUser) msgDiv.textContent = text;
+    else msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase">Kwen</p><div>${marked.parse(text)}</div>`;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-    updateFormatting();
-    return msgDiv;
+    updateCopyButtons();
 }
 
 async function sendMessage() {
@@ -190,49 +153,63 @@ async function sendMessage() {
     const key = apiKeyInput.value.trim() || DEFAULT_KEY;
     localStorage.setItem('kwen_key', key);
 
-    addMessage(text, true);
+    // Update Chat Title on first message
+    const chat = chats.find(c => c.id === currentChatId);
+    if (chat.history.length === 0) {
+        chat.title = text.substring(0, 20) + (text.length > 20 ? "..." : "");
+        renderTabs();
+    }
+
+    addMessageBubble(text, true);
+    chat.history.push(`User: ${text}`);
     userInput.value = "";
 
-    // Keep context small (last 6 messages) for the API prompt
-    const fullContextPrompt = messageHistory.slice(-6).join("\n") + "\nAssistant:";
+    const aiBubble = addMessageBubble("", false);
+    const container = aiBubble.querySelector('div');
+    aiBubble.classList.add('typing');
 
-    const aiBubble = addMessage("", false, false); // Temporary bubble
-    const textContainer = aiBubble.querySelector('.markdown-body');
-    aiBubble.classList.add("typing");
-    
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-            body: JSON.stringify({ prompt: fullContextPrompt })
+            body: JSON.stringify({ prompt: chat.history.slice(-6).join("\n") + "\nAssistant:" })
         });
 
         const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullAIResponse = "";
-
+        let fullResponse = "";
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            fullAIResponse += decoder.decode(value, { stream: true });
-            textContainer.innerHTML = marked.parse(fullAIResponse);
+            fullResponse += new TextDecoder().decode(value);
+            container.innerHTML = marked.parse(fullResponse);
             chatBox.scrollTop = chatBox.scrollHeight;
-            updateFormatting();
         }
-        
-        // Finalize history save
-        messageHistory.push(`Assistant: ${fullAIResponse}`);
-        localStorage.setItem('kwen_chat_cache', JSON.stringify(messageHistory));
-
-    } catch (error) {
-        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Foundation connection lost.</span>";
+        chat.history.push(`Assistant: ${fullResponse}`);
+        save();
+    } catch (e) {
+        container.innerText = "Error connecting to Kwen.";
     } finally {
-        aiBubble.classList.remove("typing");
+        aiBubble.classList.remove('typing');
     }
 }
 
+function updateCopyButtons() {
+    document.querySelectorAll('pre').forEach(pre => {
+        if (pre.querySelector('.copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerText = 'Copy';
+        btn.onclick = () => {
+            navigator.clipboard.writeText(pre.innerText.replace('Copy', ''));
+            btn.innerText = 'Done!';
+            setTimeout(() => btn.innerText = 'Copy', 2000);
+        };
+        pre.appendChild(btn);
+    });
+}
+
 init();
-sendBtn.onclick = sendMessage;
+document.getElementById('sendBtn').onclick = sendMessage;
 userInput.onkeydown = (e) => { if(e.key === "Enter") sendMessage(); };
 </script>
 </body>

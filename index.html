@@ -1,110 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen AI - ChatML</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #0f172a; color: white; }
-        .chat-container { height: calc(100vh - 160px); }
-        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
-        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
-        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kwen AI - ChatML</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    body { background-color: #0f172a; color: white; }
+    .chat-container { height: calc(100vh - 160px); }
+    .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
+    .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
+    .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+</style>
 </head>
 <body class="flex flex-col h-screen max-w-5xl mx-auto p-4">
 
-    <header class="flex justify-between items-center pb-4 border-b border-slate-800">
-        <h1 class="text-2xl font-black text-blue-500">KWEN</h1>
-        <input type="password" id="apiKey" placeholder="API Key (if private)" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-40">
-    </header>
+<header class="flex justify-between items-center pb-4 border-b border-slate-800">
+    <h1 class="text-2xl font-black text-blue-500">KWEN</h1>
+    <input type="password" id="apiKey" placeholder="Enter your API Key" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-60">
+</header>
 
-    <div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
-        <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
-            System: Kwen-540M is ready. Format: ChatML (OpenML).
-        </div>
+<div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
+    <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
+        System: Kwen-540M is ready. Format: ChatML (OpenML).
     </div>
+</div>
 
-    <div class="relative mt-auto">
-        <input type="text" id="userInput" placeholder="Ask anything..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-        </button>
-    </div>
+<div class="relative mt-auto">
+    <input type="text" id="userInput" placeholder="Ask anything..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+    </button>
+</div>
 
-    <script>
-        const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
-        const chatBox = document.getElementById('chatBox');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const apiKeyInput = document.getElementById('apiKey');
+<script>
+const API_URL = "https://your-space-url/v1/chat"; // Replace with your Space URL
+const chatBox = document.getElementById('chatBox');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const apiKeyInput = document.getElementById('apiKey');
 
-        // Load saved API key
-        apiKeyInput.value = localStorage.getItem('kwen_key') || "";
+// Load saved API key
+apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
-        function addMessage(text, isUser) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
-            msgDiv.textContent = text;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return msgDiv;
+// Add a message to the chat
+function addMessage(text, isUser) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
+    msgDiv.textContent = text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return msgDiv;
+}
+
+// Send a message to Kwen
+async function sendMessage() {
+    const prompt = userInput.value.trim();
+    const key = apiKeyInput.value.trim();
+
+    if (!prompt) return;
+    if (!key) {
+        alert("Please enter your API Key to use this private Space.");
+        return;
+    }
+    localStorage.setItem('kwen_key', key);
+
+    addMessage(prompt, true);
+    userInput.value = "";
+
+    const thinking = addMessage("Kwen is typing...", false);
+    thinking.classList.add("loading-pulse");
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}` // Required for private Space
+            },
+            body: JSON.stringify({ prompt: prompt }) // Matches your ChatInput schema
+        });
+
+        thinking.classList.remove("loading-pulse");
+
+        if (response.ok) {
+            const data = await response.json();
+            thinking.textContent = data.response || "No response from Kwen";
+        } else if (response.status === 403) {
+            thinking.textContent = "Forbidden: Invalid API Key.";
+            console.error(await response.text());
+        } else {
+            thinking.textContent = "Error: API request failed.";
+            console.error(await response.text());
         }
+    } catch (error) {
+        thinking.classList.remove("loading-pulse");
+        thinking.textContent = "Network Error: Could not reach the server.";
+        console.error(error);
+    }
+}
 
-        async function sendMessage() {
-            const prompt = userInput.value.trim();
-            const key = apiKeyInput.value.trim();
-
-            if (!prompt) return;
-            if (key) localStorage.setItem('kwen_key', key);
-
-            addMessage(prompt, true);
-            userInput.value = "";
-
-            const thinking = addMessage("Kwen is typing...", false);
-            thinking.classList.add("loading-pulse");
-
-            try {
-                // Set headers. Only add Authorization if user provided a key
-                const headers = { 'Content-Type': 'application/json' };
-                if (key) headers['Authorization'] = `Bearer ${key}`;
-
-                // Send POST request
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({ data: [prompt] }) // Correct Gradio payload
-                });
-
-                thinking.classList.remove("loading-pulse");
-
-                if (response.ok) {
-                    const data = await response.json();
-                    // Most Spaces respond with { data: ["reply"] }
-                    thinking.textContent = data.data?.[0] || "No response from API";
-                } else if (response.status === 403) {
-                    thinking.textContent = "Access denied. Check your API key if the Space is private.";
-                    console.error(await response.text());
-                } else {
-                    const text = await response.text();
-                    thinking.textContent = "API Error: See console for details.";
-                    console.error("API Error:", text);
-                }
-            } catch (error) {
-                thinking.classList.remove("loading-pulse");
-                thinking.textContent = "Network Error: Could not reach the server.";
-                console.error(error);
-            }
-        }
-
-        // Event listeners
-        sendBtn.onclick = sendMessage;
-        userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
-    </script>
+// Event listeners
+sendBtn.onclick = sendMessage;
+userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
+</script>
 
 </body>
 </html>

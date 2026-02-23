@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kwen</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         
@@ -38,7 +38,6 @@
             border: 1px solid rgba(255, 255, 255, 0.1); 
         }
 
-        /* Formatting & Code Blocks */
         code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
         pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; position: relative; overflow-x: auto; }
         pre code { background: transparent; color: #f8fafc; padding: 0; }
@@ -71,6 +70,7 @@
     </div>
     
     <div class="flex items-center gap-2">
+        <button onclick="clearCache()" class="text-[10px] text-slate-500 hover:text-white uppercase font-bold mr-2 tracking-widest transition-colors">Clear Chat</button>
         <div class="relative">
             <input type="password" id="apiKey" placeholder="API Key" 
                    class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
@@ -83,17 +83,13 @@
 </header>
 
 <main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-2">
-    <div class="ai-msg px-5 py-4 max-w-[85%] shadow-xl">
-        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p>
-        How can I help you today?
-    </div>
-</main>
+    </main>
 
 <footer class="pb-6 pt-2">
     <div class="relative group">
         <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"></div>
         <div class="relative flex items-center glass rounded-2xl p-2">
-            <input type="text" id="userInput" placeholder="Ask Kwen anything..." class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
+            <input type="text" id="userInput" placeholder="Ask Kwen anything..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
             <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
@@ -115,12 +111,40 @@ const apiKeyInput = document.getElementById('apiKey');
 const keyBadge = document.getElementById('keyBadge');
 
 function init() {
+    // Load API Key
     const savedKey = localStorage.getItem('kwen_key');
     apiKeyInput.value = savedKey || DEFAULT_KEY;
     if (!savedKey || savedKey === DEFAULT_KEY) keyBadge.classList.remove('hidden');
+
+    // Load Chat History from Cache
+    const cachedHistory = localStorage.getItem('kwen_chat_cache');
+    if (cachedHistory) {
+        messageHistory = JSON.parse(cachedHistory);
+        renderHistory();
+    } else {
+        // Initial Greeting if no history
+        addMessage("How can I help you today?", false, false);
+    }
 }
 
-// Automatically add copy buttons to markdown code blocks
+function renderHistory() {
+    chatBox.innerHTML = '';
+    messageHistory.forEach(msg => {
+        const isUser = msg.startsWith("User: ");
+        const text = isUser ? msg.replace("User: ", "") : msg.replace("Assistant: ", "");
+        addMessage(text, isUser, false); // false = don't re-save to history array during render
+    });
+}
+
+function clearCache() {
+    if (confirm("Clear all chat history from this browser?")) {
+        messageHistory = [];
+        localStorage.removeItem('kwen_chat_cache');
+        chatBox.innerHTML = '';
+        addMessage("Chat history cleared. How can I help you?", false, false);
+    }
+}
+
 function updateFormatting() {
     document.querySelectorAll('pre').forEach(block => {
         if (!block.querySelector('.copy-btn')) {
@@ -137,16 +161,22 @@ function updateFormatting() {
     });
 }
 
-function addMessage(text, isUser) {
+function addMessage(text, isUser, shouldSave = true) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `px-5 py-4 max-w-[85%] shadow-lg ${isUser ? 'user-msg text-white' : 'ai-msg'}`;
     
     if (isUser) {
         msgDiv.textContent = text;
+        if (shouldSave) messageHistory.push(`User: ${text}`);
     } else {
         msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p><div class="markdown-body">${marked.parse(text)}</div>`;
+        if (shouldSave) messageHistory.push(`Assistant: ${text}`);
     }
     
+    if (shouldSave) {
+        localStorage.setItem('kwen_chat_cache', JSON.stringify(messageHistory));
+    }
+
     chatBox.appendChild(msgDiv);
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     updateFormatting();
@@ -160,16 +190,13 @@ async function sendMessage() {
     const key = apiKeyInput.value.trim() || DEFAULT_KEY;
     localStorage.setItem('kwen_key', key);
 
-    // 1. Update UI
     addMessage(text, true);
     userInput.value = "";
 
-    // 2. Prepare History-aware Prompt
-    // We send the last 4 exchanges to keep context without hitting the 2048 limit
-    messageHistory.push(`User: ${text}`);
+    // Keep context small (last 6 messages) for the API prompt
     const fullContextPrompt = messageHistory.slice(-6).join("\n") + "\nAssistant:";
 
-    const aiBubble = addMessage("", false);
+    const aiBubble = addMessage("", false, false); // Temporary bubble
     const textContainer = aiBubble.querySelector('.markdown-body');
     aiBubble.classList.add("typing");
     
@@ -193,8 +220,9 @@ async function sendMessage() {
             updateFormatting();
         }
         
-        // 3. Save AI response to history
+        // Finalize history save
         messageHistory.push(`Assistant: ${fullAIResponse}`);
+        localStorage.setItem('kwen_chat_cache', JSON.stringify(messageHistory));
 
     } catch (error) {
         textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Foundation connection lost.</span>";

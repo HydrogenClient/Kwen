@@ -7,89 +7,144 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: white; margin: 0; }
-        .chat-container { height: calc(100vh - 160px); }
-        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
-        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
-        #chatBox { scroll-behavior: smooth; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         
-        /* Markdown Styling */
-        code { background-color: #0f172a; padding: 2px 4px; border-radius: 4px; font-family: monospace; color: #f87171; }
-        pre { background-color: #000; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; border: 1px solid #334155; }
-        pre code { color: #fff; background: none; padding: 0; }
-        strong { color: #60a5fa; }
+        body { 
+            background: radial-gradient(circle at top right, #1e293b, #0f172a); 
+            color: #e2e8f0; 
+            font-family: 'Inter', sans-serif;
+            margin: 0; 
+        }
+
+        /* Glassmorphism Effects */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-container { height: calc(100vh - 180px); scrollbar-width: thin; scrollbar-color: #334155 transparent; }
         
+        /* Message Styling */
+        .user-msg { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb); 
+            align-self: flex-end; 
+            border-radius: 20px 20px 4px 20px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .ai-msg { 
+            background: rgba(30, 41, 59, 0.8); 
+            align-self: flex-start; 
+            border-radius: 20px 20px 20px 4px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+
+        /* Markdown Overrides */
+        code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
+        pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+        pre code { background: transparent; color: #f8fafc; padding: 0; }
+        
+        /* Cursor Animation */
         .typing::after {
-            content: "▊";
-            display: inline-block;
-            margin-left: 3px;
-            animation: blink 0.8s infinite;
+            content: "●";
+            margin-left: 5px;
+            animation: pulse 1s infinite;
             color: #3b82f6;
         }
-        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
 </head>
-<body class="flex flex-col h-screen max-w-5xl mx-auto p-4">
+<body class="flex flex-col h-screen max-w-4xl mx-auto px-4 py-2">
 
-<header class="flex justify-between items-center pb-4 border-b border-slate-800">
-    <div class="flex items-center gap-2">
-        <h1 class="text-2xl font-black text-blue-500 tracking-tighter">KWEN</h1>
-        <span class="text-[10px] bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">1.5B</span>
+<header class="flex justify-between items-center py-4 px-2 border-b border-white/10">
+    <div class="flex items-center gap-3">
+        <div class="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/20">K</div>
+        <div>
+            <h1 class="text-xl font-extrabold tracking-tighter leading-none">KWEN</h1>
+            <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold">Foundation v1.5B</p>
+        </div>
     </div>
-    <input type="password" id="apiKey" placeholder="Enter your API Key" 
-           class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-60 focus:border-blue-500 outline-none transition-all">
+    
+    <div class="flex items-center gap-2">
+        <input type="password" id="apiKey" placeholder="API Key" 
+               class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+        
+        <a href="https://hydrogenclient.github.io/Kwen/dashboard" 
+           class="p-2 glass hover:bg-white/10 rounded-lg transition-colors group" title="Dashboard Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </a>
+    </div>
 </header>
 
-<div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
-    <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
+<main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-2">
+    <div class="ai-msg px-5 py-4 max-w-[85%] shadow-xl">
+        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p>
         How can I help you today?
     </div>
-</div>
+</main>
 
-<div class="relative mt-auto">
-    <input type="text" id="userInput" placeholder="Ask anything..." 
-           class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-    <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-    </button>
-</div>
+<footer class="pb-6 pt-2">
+    <div class="relative group">
+        <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"></div>
+        <div class="relative flex items-center glass rounded-2xl p-2">
+            <input type="text" id="userInput" placeholder="Ask Kwen anything..." 
+                   class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white placeholder-slate-500">
+            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</footer>
 
 <script>
-// --- Configuration ---
+// --- Configuration & Elements ---
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKey');
 
-// Load stored key
+// Initialize API Key
 apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
-// --- Helper Functions ---
+// Add Message Function
 function addMessage(text, isUser) {
     const msgDiv = document.createElement('div');
-    msgDiv.className = `px-4 py-3 max-w-[85%] ${isUser ? 'user-msg whitespace-pre-wrap' : 'ai-msg'}`;
+    msgDiv.className = `px-5 py-4 max-w-[85%] shadow-lg ${isUser ? 'user-msg text-white' : 'ai-msg'}`;
     
     if (isUser) {
         msgDiv.textContent = text;
     } else {
-        msgDiv.innerHTML = marked.parse(text);
+        const label = document.createElement('p');
+        label.className = "text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter";
+        label.innerText = "Kwen Foundation";
+        msgDiv.appendChild(label);
+        
+        const content = document.createElement('div');
+        content.className = "markdown-body";
+        content.innerHTML = marked.parse(text);
+        msgDiv.appendChild(content);
     }
     
     chatBox.appendChild(msgDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     return msgDiv;
 }
 
+// Main Send Logic
 async function sendMessage() {
     const prompt = userInput.value.trim();
     const key = apiKeyInput.value.trim();
 
     if (!prompt) return;
     if (!key) {
-        alert("Please enter your API Key first.");
+        alert("Please enter your API Key.");
         return;
     }
 
@@ -98,6 +153,7 @@ async function sendMessage() {
     userInput.value = "";
 
     const aiMessageBubble = addMessage("", false);
+    const textContainer = aiMessageBubble.querySelector('.markdown-body');
     aiMessageBubble.classList.add("typing");
     
     try {
@@ -110,11 +166,7 @@ async function sendMessage() {
             body: JSON.stringify({ prompt: prompt })
         });
 
-        if (!response.ok) {
-            aiMessageBubble.classList.remove("typing");
-            aiMessageBubble.textContent = "Error: Invalid key or server offline.";
-            return;
-        }
+        if (!response.ok) throw new Error("API Error");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -124,37 +176,26 @@ async function sendMessage() {
             const { done, value } = await reader.read();
             if (done) break;
             
-            const chunk = decoder.decode(value, { stream: true });
-            fullText += chunk;
-            
-            // Re-parse Markdown with every chunk for the stream effect
-            aiMessageBubble.innerHTML = marked.parse(fullText);
+            fullText += decoder.decode(value, { stream: true });
+            textContainer.innerHTML = marked.parse(fullText);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
     } catch (error) {
-        console.error(error);
-        aiMessageBubble.textContent = "Network Error. Check console.";
+        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Connection failed.</span>";
     } finally {
         aiMessageBubble.classList.remove("typing");
     }
 }
 
-// --- Event Listeners (The "Buttons work" part) ---
-document.addEventListener('DOMContentLoaded', () => {
-    sendBtn.addEventListener('click', (e) => {
+// Event Listeners
+sendBtn.addEventListener('click', sendMessage);
+userInput.addEventListener('keydown', (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
-    });
-
-    userInput.addEventListener('keydown', (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+    }
 });
 </script>
-
 </body>
 </html>

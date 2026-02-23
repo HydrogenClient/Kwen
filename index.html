@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kwen AI - ChatML (Streaming)</title>
+<title>Kwen AI - ChatML</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { background-color: #0f172a; color: white; }
@@ -35,16 +35,14 @@
 </div>
 
 <script>
-const API_URL = "https://your-space-url/v1/chat"; // Replace with your Space URL
+const API_URL = "https://your-space-url/v1/chat"; // replace with your Space URL
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKey');
 
-// Load saved API key
 apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
-// Add message to chat
 function addMessage(text, isUser) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
@@ -54,7 +52,6 @@ function addMessage(text, isUser) {
   return msgDiv;
 }
 
-// Send message with streaming
 async function sendMessage() {
   const prompt = userInput.value.trim();
   const key = apiKeyInput.value.trim();
@@ -69,7 +66,7 @@ async function sendMessage() {
   addMessage(prompt, true);
   userInput.value = "";
 
-  const thinking = addMessage("", false);
+  const thinking = addMessage("Kwen is typing...", false);
 
   try {
     const response = await fetch(API_URL, {
@@ -87,20 +84,10 @@ async function sendMessage() {
       return;
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let done = false;
-    let result = "";
-
-    while (!done) {
-      const { value, done: readerDone } = await reader.read();
-      done = readerDone;
-      if (value) {
-        result += decoder.decode(value, { stream: true });
-        thinking.textContent = result; // Update as Kwen "types"
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }
-    }
+    // Parse JSON normally
+    const data = await response.json();
+    thinking.textContent = data.response || "No response from Kwen";
+    chatBox.scrollTop = chatBox.scrollHeight;
 
   } catch (error) {
     thinking.textContent = `Network Error: ${error.message}`;
@@ -108,7 +95,6 @@ async function sendMessage() {
   }
 }
 
-// Event listeners
 sendBtn.onclick = sendMessage;
 userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
 </script>

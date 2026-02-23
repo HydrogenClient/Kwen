@@ -37,7 +37,7 @@
 </div>
 
 <script>
-const API_URL = "https://your-space-url/v1/chat"; // Replace with your Space URL
+const API_URL = "https://your-space-url/v1/chat"; // Replace with your private Space URL
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -46,7 +46,7 @@ const apiKeyInput = document.getElementById('apiKey');
 // Load saved API key
 apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
-// Add a message to the chat
+// Add message to chat
 function addMessage(text, isUser) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
@@ -56,7 +56,7 @@ function addMessage(text, isUser) {
     return msgDiv;
 }
 
-// Send a message to Kwen
+// Send message with 90-second timeout
 async function sendMessage() {
     const prompt = userInput.value.trim();
     const key = apiKeyInput.value.trim();
@@ -75,15 +75,21 @@ async function sendMessage() {
     thinking.classList.add("loading-pulse");
 
     try {
-        const response = await fetch(API_URL, {
+        const fetchPromise = fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}` // Required for private Space
+                'Authorization': `Bearer ${key}`
             },
-            body: JSON.stringify({ prompt: prompt }) // Matches your ChatInput schema
+            body: JSON.stringify({ prompt: prompt })
         });
 
+        // Timeout promise for 90 seconds
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timed out after 90 seconds")), 90000)
+        );
+
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
         thinking.classList.remove("loading-pulse");
 
         if (response.ok) {
@@ -98,7 +104,7 @@ async function sendMessage() {
         }
     } catch (error) {
         thinking.classList.remove("loading-pulse");
-        thinking.textContent = "Network Error: Could not reach the server.";
+        thinking.textContent = `Network Error: ${error.message}`;
         console.error(error);
     }
 }

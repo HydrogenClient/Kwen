@@ -144,7 +144,7 @@ function addMessage(text, isUser) {
     if (isUser) {
         msgDiv.textContent = text;
     } else {
-        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen Foundation</p><div class="markdown-body">${marked.parse(text)}</div>`;
+        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p><div class="markdown-body">${marked.parse(text)}</div>`;
     }
     
     chatBox.appendChild(msgDiv);

@@ -3,45 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with Kwen</title>
+    <title>Kwen AI - ChatML Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: white; }
-        .chat-container { height: calc(100vh - 180px); }
-        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 0 18px; }
-        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 0; border: 1px solid #334155; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        body { background-color: #0f172a; color: white; font-family: ui-sans-serif, system-ui; }
+        .chat-container { height: calc(100vh - 160px); scroll-behavior: smooth; }
+        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
+        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
+        .typing-dots span { animation: blink 1.4s infinite both; }
+        .typing-dots span:nth-child(2) { animation-delay: .2s; }
+        .typing-dots span:nth-child(3) { animation-delay: .4s; }
+        @keyframes blink { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
     </style>
 </head>
-<body class="flex flex-col h-screen max-w-4xl mx-auto p-4">
+<body class="flex flex-col h-screen max-w-5xl mx-auto p-4">
 
-    <header class="flex justify-between items-center py-4 border-b border-slate-800">
+    <header class="flex justify-between items-center pb-4 border-b border-slate-800">
         <div>
-            <h1 class="text-xl font-bold">Kwen <span class="text-blue-500">AI</span></h1>
-            <p class="text-xs text-slate-400">Powered by The Kwen Foundation</p>
+            <h1 class="text-2xl font-black tracking-tighter text-blue-500">KWEN <span class="text-white text-lg font-light tracking-normal">Foundation</span></h1>
         </div>
-        <input type="password" id="apiKey" placeholder="Paste API Key here..." 
-            class="text-xs bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg w-48 focus:outline-none focus:border-blue-500">
+        <div class="flex items-center gap-3">
+            <span class="text-[10px] text-slate-500 uppercase font-bold">API KEY</span>
+            <input type="password" id="apiKey" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-40 focus:outline-none focus:border-blue-500">
+        </div>
     </header>
 
     <div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
-        <div class="ai-msg px-4 py-2 max-w-[80%]">
-            Hello! I am Kwen. Paste your API key above to start chatting.
+        <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
+            Welcome. I am the Kwen-540M model. I am optimized for ChatML. How can I assist you today?
         </div>
     </div>
 
-    <footer class="mt-auto py-4">
-        <div class="relative flex items-center">
-            <input type="text" id="userInput" placeholder="Ask Kwen anything..." 
-                class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-            <button id="sendBtn" class="absolute right-3 p-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            </button>
-        </div>
-    </footer>
+    <div class="relative mt-auto">
+        <input type="text" id="userInput" placeholder="Send a message..." 
+            class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+        <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+        </button>
+    </div>
 
     <script>
         const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
@@ -50,65 +51,66 @@
         const sendBtn = document.getElementById('sendBtn');
         const apiKeyInput = document.getElementById('apiKey');
 
-        // Load saved key from local storage
         apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
         function addMessage(text, isUser) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = `px-4 py-3 max-w-[85%] ${isUser ? 'user-msg' : 'ai-msg shadow-lg'}`;
-            msgDiv.innerText = text;
+            msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg shadow-md' : 'ai-msg shadow-lg'}`;
+            msgDiv.textContent = text;
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
+            return msgDiv;
         }
 
-        async function handleChat() {
-            const text = userInput.value.trim();
+        async function sendMessage() {
+            const prompt = userInput.value.trim();
             const key = apiKeyInput.value.trim();
 
-            if (!text) return;
-            if (!key) return alert("Please enter your API Key first!");
+            if (!prompt || !key) return;
 
-            // Save key for next time
             localStorage.setItem('kwen_key', key);
-            
-            addMessage(text, true);
+            addMessage(prompt, true);
             userInput.value = "";
 
-            // Typing indicator
-            const loadingMsg = document.createElement('div');
-            loadingMsg.className = "ai-msg px-4 py-2 text-slate-400 italic";
-            loadingMsg.innerText = "Kwen is thinking...";
-            chatBox.appendChild(loadingMsg);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            // Add thinking indicator
+            const thinking = addMessage("", false);
+            thinking.innerHTML = `<div class="typing-dots">Kwen is thinking<span>.</span><span>.</span><span>.</span></div>`;
 
             try {
+                // Increased timeout using AbortController
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second limit
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${key}`
                     },
-                    body: JSON.stringify({ prompt: text })
+                    body: JSON.stringify({ prompt: prompt }),
+                    signal: controller.signal
                 });
 
-                chatBox.removeChild(loadingMsg);
+                clearTimeout(timeoutId);
 
                 if (response.ok) {
                     const data = await response.json();
-                    addMessage(data.response, false);
-                } else if (response.status === 403) {
-                    addMessage("Error: Invalid or expired API Key.", false);
+                    thinking.textContent = data.response;
                 } else {
-                    addMessage("Error: Could not reach the Kwen Foundation API.", false);
+                    const errData = await response.json();
+                    thinking.innerHTML = `<span class="text-red-400">Error: ${errData.detail || "API Error"}</span>`;
                 }
             } catch (error) {
-                chatBox.removeChild(loadingMsg);
-                addMessage("Connection error. Check your internet or API status.", false);
+                if (error.name === 'AbortError') {
+                    thinking.innerHTML = `<span class="text-yellow-400">Timeout: The model is taking too long to generate on CPU.</span>`;
+                } else {
+                    thinking.innerHTML = `<span class="text-red-400">Connection Failed. Check if your Space is "Running".</span>`;
+                }
             }
         }
 
-        sendBtn.onclick = handleChat;
-        userInput.onkeypress = (e) => { if (e.key === "Enter") handleChat(); };
+        sendBtn.onclick = sendMessage;
+        userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
     </script>
 </body>
 </html>

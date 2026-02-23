@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Kwen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .chat-container { height: calc(100vh - 180px); }
+        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 0 18px; }
+        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 0; border: 1px solid #334155; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col h-screen max-w-4xl mx-auto p-4">
+
+    <header class="flex justify-between items-center py-4 border-b border-slate-800">
+        <div>
+            <h1 class="text-xl font-bold">Kwen <span class="text-blue-500">AI</span></h1>
+            <p class="text-xs text-slate-400">Powered by The Kwen Foundation</p>
+        </div>
+        <input type="password" id="apiKey" placeholder="Paste API Key here..." 
+            class="text-xs bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg w-48 focus:outline-none focus:border-blue-500">
+    </header>
+
+    <div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
+        <div class="ai-msg px-4 py-2 max-w-[80%]">
+            Hello! I am Kwen. Paste your API key above to start chatting.
+        </div>
+    </div>
+
+    <footer class="mt-auto py-4">
+        <div class="relative flex items-center">
+            <input type="text" id="userInput" placeholder="Ask Kwen anything..." 
+                class="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+            <button id="sendBtn" class="absolute right-3 p-2 bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const apiKeyInput = document.getElementById('apiKey');
+
+        // Load saved key from local storage
+        apiKeyInput.value = localStorage.getItem('kwen_key') || "";
+
+        function addMessage(text, isUser) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `px-4 py-3 max-w-[85%] ${isUser ? 'user-msg' : 'ai-msg shadow-lg'}`;
+            msgDiv.innerText = text;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function handleChat() {
+            const text = userInput.value.trim();
+            const key = apiKeyInput.value.trim();
+
+            if (!text) return;
+            if (!key) return alert("Please enter your API Key first!");
+
+            // Save key for next time
+            localStorage.setItem('kwen_key', key);
+            
+            addMessage(text, true);
+            userInput.value = "";
+
+            // Typing indicator
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = "ai-msg px-4 py-2 text-slate-400 italic";
+            loadingMsg.innerText = "Kwen is thinking...";
+            chatBox.appendChild(loadingMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`
+                    },
+                    body: JSON.stringify({ prompt: text })
+                });
+
+                chatBox.removeChild(loadingMsg);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessage(data.response, false);
+                } else if (response.status === 403) {
+                    addMessage("Error: Invalid or expired API Key.", false);
+                } else {
+                    addMessage("Error: Could not reach the Kwen Foundation API.", false);
+                }
+            } catch (error) {
+                chatBox.removeChild(loadingMsg);
+                addMessage("Connection error. Check your internet or API status.", false);
+            }
+        }
+
+        sendBtn.onclick = handleChat;
+        userInput.onkeypress = (e) => { if (e.key === "Enter") handleChat(); };
+    </script>
+</body>
+</html>

@@ -69,24 +69,29 @@
             thinking.classList.add("loading-pulse");
 
             try {
+                // Set headers. Only add Authorization if user provided a key
                 const headers = { 'Content-Type': 'application/json' };
                 if (key) headers['Authorization'] = `Bearer ${key}`;
 
+                // Send POST request
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ data: [prompt] }) // Correct format for Gradio Space
+                    body: JSON.stringify({ data: [prompt] }) // Correct Gradio payload
                 });
 
                 thinking.classList.remove("loading-pulse");
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Gradio Spaces typically return { data: ["reply text"] }
+                    // Most Spaces respond with { data: ["reply"] }
                     thinking.textContent = data.data?.[0] || "No response from API";
+                } else if (response.status === 403) {
+                    thinking.textContent = "Access denied. Check your API key if the Space is private.";
+                    console.error(await response.text());
                 } else {
                     const text = await response.text();
-                    thinking.textContent = "Error: API returned an error.";
+                    thinking.textContent = "API Error: See console for details.";
                     console.error("API Error:", text);
                 }
             } catch (error) {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen</title>
+    <title>Kwen AI | Foundation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -16,7 +16,6 @@
             margin: 0; 
         }
 
-        /* Glassmorphism Effects */
         .glass {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
@@ -25,7 +24,6 @@
 
         .chat-container { height: calc(100vh - 180px); scrollbar-width: thin; scrollbar-color: #334155 transparent; }
         
-        /* Message Styling */
         .user-msg { 
             background: linear-gradient(135deg, #3b82f6, #2563eb); 
             align-self: flex-end; 
@@ -40,12 +38,10 @@
             border: 1px solid rgba(255, 255, 255, 0.1); 
         }
 
-        /* Markdown Overrides */
         code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
-        pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+        pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
         pre code { background: transparent; color: #f8fafc; padding: 0; }
         
-        /* Cursor Animation */
         .typing::after {
             content: "●";
             margin-left: 5px;
@@ -67,8 +63,11 @@
     </div>
     
     <div class="flex items-center gap-2">
-        <input type="password" id="apiKey" placeholder="API Key" 
-               class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+        <div class="relative">
+            <input type="password" id="apiKey" placeholder="API Key" 
+                   class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            <span id="keyBadge" class="hidden absolute -top-2 -right-1 text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">Default</span>
+        </div>
         
         <a href="https://hydrogenclient.github.io/Kwen/dashboard" 
            class="p-2 glass hover:bg-white/10 rounded-lg transition-colors group" title="Dashboard Settings">
@@ -82,7 +81,7 @@
 
 <main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-2">
     <div class="ai-msg px-5 py-4 max-w-[85%] shadow-xl">
-        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p>
+        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen Foundation</p>
         How can I help you today?
     </div>
 </main>
@@ -103,17 +102,36 @@
 </footer>
 
 <script>
-// --- Configuration & Elements ---
+const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
+
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKey');
+const keyBadge = document.getElementById('keyBadge');
 
-// Initialize API Key
-apiKeyInput.value = localStorage.getItem('kwen_key') || "";
+// --- Initialization ---
+function init() {
+    const savedKey = localStorage.getItem('kwen_key');
+    if (savedKey && savedKey.trim() !== "") {
+        apiKeyInput.value = savedKey;
+        keyBadge.classList.add('hidden');
+    } else {
+        apiKeyInput.value = DEFAULT_KEY;
+        keyBadge.classList.remove('hidden');
+    }
+}
 
-// Add Message Function
+// Watch for manual key changes
+apiKeyInput.addEventListener('input', () => {
+    if (apiKeyInput.value.trim() === DEFAULT_KEY || apiKeyInput.value.trim() === "") {
+        keyBadge.classList.remove('hidden');
+    } else {
+        keyBadge.classList.add('hidden');
+    }
+});
+
 function addMessage(text, isUser) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `px-5 py-4 max-w-[85%] shadow-lg ${isUser ? 'user-msg text-white' : 'ai-msg'}`;
@@ -137,16 +155,17 @@ function addMessage(text, isUser) {
     return msgDiv;
 }
 
-// Main Send Logic
 async function sendMessage() {
     const prompt = userInput.value.trim();
-    const key = apiKeyInput.value.trim();
+    let key = apiKeyInput.value.trim();
+
+    // Use default if empty
+    if (!key) {
+        key = DEFAULT_KEY;
+        apiKeyInput.value = DEFAULT_KEY;
+    }
 
     if (!prompt) return;
-    if (!key) {
-        alert("Please enter your API Key.");
-        return;
-    }
 
     localStorage.setItem('kwen_key', key);
     addMessage(prompt, true);
@@ -175,20 +194,19 @@ async function sendMessage() {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
             fullText += decoder.decode(value, { stream: true });
             textContainer.innerHTML = marked.parse(fullText);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
     } catch (error) {
-        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Connection failed.</span>";
+        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Foundation connection lost. Check API Key or Space status.</span>";
     } finally {
         aiMessageBubble.classList.remove("typing");
     }
 }
 
-// Event Listeners
+init();
 sendBtn.addEventListener('click', sendMessage);
 userInput.addEventListener('keydown', (e) => {
     if (e.key === "Enter" && !e.shiftKey) {

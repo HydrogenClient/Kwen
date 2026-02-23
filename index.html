@@ -1,103 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kwen AI - ChatML</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  body { background-color: #0f172a; color: white; }
-  .chat-container { height: calc(100vh - 160px); }
-  .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
-  .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kwen AI - Hydrogen Client</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: white; }
+        .chat-container { height: calc(100vh - 160px); }
+        .user-msg { background: #3b82f6; align-self: flex-end; border-radius: 18px 18px 2px 18px; }
+        .ai-msg { background: #1e293b; align-self: flex-start; border-radius: 18px 18px 18px 2px; border: 1px solid #334155; }
+        
+        /* Smooth scrolling for chat */
+        #chatBox { scroll-behavior: smooth; }
+
+        /* Cursor animation for streaming */
+        .typing::after {
+            content: "▊";
+            display: inline-block;
+            margin-left: 3px;
+            animation: blink 0.8s infinite;
+            color: #3b82f6;
+        }
+
+        @keyframes blink { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    </style>
 </head>
 <body class="flex flex-col h-screen max-w-5xl mx-auto p-4">
 
 <header class="flex justify-between items-center pb-4 border-b border-slate-800">
-  <h1 class="text-2xl font-black text-blue-500">KWEN</h1>
-  <input type="password" id="apiKey" placeholder="Enter your API Key" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-60">
+    <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-black text-blue-500 tracking-tighter">KWEN</h1>
+        <span class="text-[10px] bg-blue-900/30 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">540M</span>
+    </div>
+    <input type="password" id="apiKey" placeholder="Enter your API Key" 
+           class="bg-slate-900 border border-slate-700 px-3 py-1 rounded text-sm w-60 focus:border-blue-500 outline-none transition-all">
 </header>
 
 <div id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-4 py-6 px-2">
-  <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
-    System: Kwen-540M is ready. Format: ChatML (OpenML).
-  </div>
+    <div class="ai-msg px-4 py-3 max-w-[80%] shadow-lg">
+        System: Connected to The Kwen Foundation API. Tokens will stream in real-time.
+    </div>
 </div>
 
 <div class="relative mt-auto">
-  <input type="text" id="userInput" placeholder="Ask anything..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500">
-  <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-    </svg>
-  </button>
+    <input type="text" id="userInput" placeholder="Ask anything..." 
+           class="w-full bg-slate-800 border border-slate-700 rounded-xl px-5 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+    <button id="sendBtn" class="absolute right-3 top-2.5 p-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+    </button>
 </div>
 
 <script>
-const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat"; // Your real Space URL
+/** * IMPORTANT: This client is authorized for use only at 
+ * https://hydrogenclient.github.io 
+ */
+const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKey');
 
-// Load saved API key
+// Initialize state
 apiKeyInput.value = localStorage.getItem('kwen_key') || "";
 
 function addMessage(text, isUser) {
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
-  msgDiv.textContent = text;
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  return msgDiv;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `px-4 py-3 max-w-[85%] whitespace-pre-wrap ${isUser ? 'user-msg' : 'ai-msg'}`;
+    msgDiv.textContent = text;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return msgDiv;
 }
 
 async function sendMessage() {
-  const prompt = userInput.value.trim();
-  const key = apiKeyInput.value.trim();
+    const prompt = userInput.value.trim();
+    const key = apiKeyInput.value.trim();
 
-  if (!prompt) return;
-  if (!key) {
-    alert("Please enter your API Key to use this private Space.");
-    return;
-  }
-  localStorage.setItem('kwen_key', key);
-
-  addMessage(prompt, true);
-  userInput.value = "";
-
-  const thinking = addMessage("Kwen is typing...", false);
-
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`
-      },
-      body: JSON.stringify({ prompt: prompt })
-    });
-
-    if (!response.ok) {
-      thinking.textContent = response.status === 403 ? "Forbidden: Invalid API Key." : "Error: API request failed.";
-      console.error(await response.text());
-      return;
+    if (!prompt) return;
+    if (!key) {
+        alert("Authorization required: Please enter your Kwen API Key.");
+        return;
     }
 
-    // Parse the JSON response normally
-    const data = await response.json();
-    thinking.textContent = data.response || "No response from Kwen";
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // Save key for convenience
+    localStorage.setItem('kwen_key', key);
 
-  } catch (error) {
-    thinking.textContent = `Network Error: ${error.message}`;
-    console.error(error);
-  }
+    // Add user message to UI
+    addMessage(prompt, true);
+    userInput.value = "";
+
+    // Prepare AI message bubble with typing effect
+    const aiMessageBubble = addMessage("", false);
+    aiMessageBubble.classList.add("typing");
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${key}`
+            },
+            body: JSON.stringify({ prompt: prompt })
+        });
+
+        if (!response.ok) {
+            aiMessageBubble.classList.remove("typing");
+            if (response.status === 403) {
+                aiMessageBubble.textContent = "Error: Invalid API Key. Access denied.";
+            } else {
+                aiMessageBubble.textContent = `Error: ${response.status} - Server encountered an issue.`;
+            }
+            return;
+        }
+
+        // Handle the incoming stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            // Decode chunk and append
+            const chunk = decoder.decode(value, { stream: true });
+            fullText += chunk;
+            
+            // Update the UI in real-time
+            aiMessageBubble.textContent = fullText;
+            
+            // Keep scroll at bottom during generation
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+    } catch (error) {
+        console.error("Connection Error:", error);
+        aiMessageBubble.textContent = `Network Error: ${error.message}. Is the Space online?`;
+    } finally {
+        aiMessageBubble.classList.remove("typing");
+    }
 }
 
+// Event Listeners
 sendBtn.onclick = sendMessage;
-userInput.onkeypress = (e) => { if (e.key === "Enter") sendMessage(); };
+userInput.onkeypress = (e) => { 
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+};
 </script>
 
 </body>

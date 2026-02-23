@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen AI | Foundation</title>
+    <title>Kwen</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -38,15 +38,23 @@
             border: 1px solid rgba(255, 255, 255, 0.1); 
         }
 
+        /* Formatting & Code Blocks */
         code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
-        pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; overflow-x: auto; }
+        pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; position: relative; overflow-x: auto; }
         pre code { background: transparent; color: #f8fafc; padding: 0; }
         
+        .copy-btn {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .copy-btn:hover { background: #3b82f6; color: white; }
+
         .typing::after {
-            content: "●";
-            margin-left: 5px;
-            animation: pulse 1s infinite;
-            color: #3b82f6;
+            content: "●"; margin-left: 5px;
+            animation: pulse 1s infinite; color: #3b82f6;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
@@ -58,7 +66,7 @@
         <div class="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-blue-500/20">K</div>
         <div>
             <h1 class="text-xl font-extrabold tracking-tighter leading-none">KWEN</h1>
-            <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold">Foundation v1.5B</p>
+            <p class="text-[10px] uppercase tracking-widest text-blue-400 font-bold">v1.5B</p>
         </div>
     </div>
     
@@ -68,20 +76,15 @@
                    class="glass px-4 py-2 rounded-lg text-sm w-40 md:w-60 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             <span id="keyBadge" class="hidden absolute -top-2 -right-1 text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">Default</span>
         </div>
-        
-        <a href="https://hydrogenclient.github.io/Kwen/dashboard" 
-           class="p-2 glass hover:bg-white/10 rounded-lg transition-colors group" title="Dashboard Settings">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+        <a href="https://hydrogenclient.github.io/Kwen/dashboard" class="p-2 glass hover:bg-white/10 rounded-lg transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
         </a>
     </div>
 </header>
 
 <main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-2">
     <div class="ai-msg px-5 py-4 max-w-[85%] shadow-xl">
-        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen Foundation</p>
+        <p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen</p>
         How can I help you today?
     </div>
 </main>
@@ -90,12 +93,9 @@
     <div class="relative group">
         <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"></div>
         <div class="relative flex items-center glass rounded-2xl p-2">
-            <input type="text" id="userInput" placeholder="Ask Kwen anything..." 
-                   class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white placeholder-slate-500">
+            <input type="text" id="userInput" placeholder="Ask Kwen anything..." class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
             <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
         </div>
     </div>
@@ -105,32 +105,37 @@
 const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 
+// --- CHAT HISTORY STORAGE ---
+let messageHistory = []; 
+
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const apiKeyInput = document.getElementById('apiKey');
 const keyBadge = document.getElementById('keyBadge');
 
-// --- Initialization ---
 function init() {
     const savedKey = localStorage.getItem('kwen_key');
-    if (savedKey && savedKey.trim() !== "") {
-        apiKeyInput.value = savedKey;
-        keyBadge.classList.add('hidden');
-    } else {
-        apiKeyInput.value = DEFAULT_KEY;
-        keyBadge.classList.remove('hidden');
-    }
+    apiKeyInput.value = savedKey || DEFAULT_KEY;
+    if (!savedKey || savedKey === DEFAULT_KEY) keyBadge.classList.remove('hidden');
 }
 
-// Watch for manual key changes
-apiKeyInput.addEventListener('input', () => {
-    if (apiKeyInput.value.trim() === DEFAULT_KEY || apiKeyInput.value.trim() === "") {
-        keyBadge.classList.remove('hidden');
-    } else {
-        keyBadge.classList.add('hidden');
-    }
-});
+// Automatically add copy buttons to markdown code blocks
+function updateFormatting() {
+    document.querySelectorAll('pre').forEach(block => {
+        if (!block.querySelector('.copy-btn')) {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.innerText = 'COPY';
+            btn.onclick = () => {
+                navigator.clipboard.writeText(block.querySelector('code').innerText);
+                btn.innerText = 'COPIED!';
+                setTimeout(() => btn.innerText = 'COPY', 2000);
+            };
+            block.appendChild(btn);
+        }
+    });
+}
 
 function addMessage(text, isUser) {
     const msgDiv = document.createElement('div');
@@ -139,81 +144,68 @@ function addMessage(text, isUser) {
     if (isUser) {
         msgDiv.textContent = text;
     } else {
-        const label = document.createElement('p');
-        label.className = "text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter";
-        label.innerText = "Kwen Foundation";
-        msgDiv.appendChild(label);
-        
-        const content = document.createElement('div');
-        content.className = "markdown-body";
-        content.innerHTML = marked.parse(text);
-        msgDiv.appendChild(content);
+        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-xs mb-1 uppercase tracking-tighter">Kwen Foundation</p><div class="markdown-body">${marked.parse(text)}</div>`;
     }
     
     chatBox.appendChild(msgDiv);
     chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    updateFormatting();
     return msgDiv;
 }
 
 async function sendMessage() {
-    const prompt = userInput.value.trim();
-    let key = apiKeyInput.value.trim();
+    const text = userInput.value.trim();
+    if (!text) return;
 
-    // Use default if empty
-    if (!key) {
-        key = DEFAULT_KEY;
-        apiKeyInput.value = DEFAULT_KEY;
-    }
-
-    if (!prompt) return;
-
+    const key = apiKeyInput.value.trim() || DEFAULT_KEY;
     localStorage.setItem('kwen_key', key);
-    addMessage(prompt, true);
+
+    // 1. Update UI
+    addMessage(text, true);
     userInput.value = "";
 
-    const aiMessageBubble = addMessage("", false);
-    const textContainer = aiMessageBubble.querySelector('.markdown-body');
-    aiMessageBubble.classList.add("typing");
+    // 2. Prepare History-aware Prompt
+    // We send the last 4 exchanges to keep context without hitting the 2048 limit
+    messageHistory.push(`User: ${text}`);
+    const fullContextPrompt = messageHistory.slice(-6).join("\n") + "\nAssistant:";
+
+    const aiBubble = addMessage("", false);
+    const textContainer = aiBubble.querySelector('.markdown-body');
+    aiBubble.classList.add("typing");
     
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify({ prompt: prompt })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ prompt: fullContextPrompt })
         });
-
-        if (!response.ok) throw new Error("API Error");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let fullText = "";
+        let fullAIResponse = "";
 
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            fullText += decoder.decode(value, { stream: true });
-            textContainer.innerHTML = marked.parse(fullText);
+            fullAIResponse += decoder.decode(value, { stream: true });
+            textContainer.innerHTML = marked.parse(fullAIResponse);
             chatBox.scrollTop = chatBox.scrollHeight;
+            updateFormatting();
         }
+        
+        // 3. Save AI response to history
+        messageHistory.push(`Assistant: ${fullAIResponse}`);
 
     } catch (error) {
-        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Foundation connection lost. Check API Key or Space status.</span>";
+        textContainer.innerHTML = "<span class='text-red-400 font-mono text-sm'>[!] ERROR: Foundation connection lost.</span>";
     } finally {
-        aiMessageBubble.classList.remove("typing");
+        aiBubble.classList.remove("typing");
     }
 }
 
 init();
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keydown', (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
+sendBtn.onclick = sendMessage;
+userInput.onkeydown = (e) => { if(e.key === "Enter") sendMessage(); };
 </script>
 </body>
 </html>

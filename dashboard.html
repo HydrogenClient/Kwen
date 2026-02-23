@@ -3,51 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen API Dashboard</title>
+    <title>Kwen | API Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .kwen-gradient { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
+        body { 
+            background: radial-gradient(circle at bottom left, #1e293b, #0f172a); 
+            color: #e2e8f0; 
+            font-family: 'Inter', sans-serif;
+            min-height: screen;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .kwen-gradient { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .status-pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { box-shadow: 0 0 0 0px rgba(34, 197, 94, 0.4); }
+            100% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
 
-    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold tracking-tight">Kwen <span class="text-blue-500">Foundation</span></h1>
-            <p class="text-slate-400 mt-2">API Management Dashboard</p>
+    <a href="https://hydrogenclient.github.io/Kwen/" 
+       class="absolute top-6 left-6 flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+        </svg>
+        Return to Chat
+    </a>
+
+    <div class="glass w-full max-w-md p-10 rounded-3xl shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl"></div>
+
+        <div class="text-center mb-10">
+            <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4">
+                <div class="flex items-center gap-2">
+                    <span id="statusDot" class="h-2 w-2 rounded-full bg-slate-500"></span>
+                    <span id="statusText" class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Checking API...</span>
+                </div>
+            </div>
+            <h1 class="text-4xl font-black tracking-tighter">KWEN <span class="text-blue-500 italic">ID</span></h1>
+            <p class="text-slate-400 mt-2 text-sm font-medium">Foundation Access Management</p>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-6">
             <div>
-                <label class="block text-sm font-medium text-slate-300 mb-1">Username</label>
-                <input type="text" id="userField" placeholder="Enter your name" 
-                    class="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Identity Username</label>
+                <input type="text" id="userField" placeholder="e.g. KwenUser_01" 
+                    class="w-full px-5 py-4 rounded-xl bg-slate-900/50 border border-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all placeholder:text-slate-600">
             </div>
 
-            <button id="genBtn" class="kwen-gradient w-full py-3 rounded-lg font-bold hover:opacity-90 transition-opacity flex justify-center items-center">
-                <span>Generate New API Key</span>
+            <button id="genBtn" class="kwen-gradient w-full py-4 rounded-xl font-bold text-white hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Generate Access Key
             </button>
         </div>
 
-        <div id="resultCard" class="mt-8 hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div class="p-4 rounded-lg bg-slate-900 border border-blue-500/30">
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Your API Key</p>
-                <div class="flex items-center justify-between gap-2">
-                    <code id="keyDisplay" class="text-sm font-mono text-slate-100 break-all"></code>
-                    <button onclick="copyKey()" class="p-2 hover:bg-slate-800 rounded-md transition-colors" title="Copy Key">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+        <div id="resultCard" class="mt-8 hidden animate-in fade-in zoom-in duration-300">
+            <div class="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/20 relative group">
+                <p class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-3">Provisioned API Key</p>
+                <div class="flex items-center justify-between gap-3">
+                    <code id="keyDisplay" class="text-xs font-mono text-blue-100 break-all leading-relaxed bg-black/30 p-2 rounded-lg flex-1"></code>
+                    <button onclick="copyKey()" class="p-3 bg-blue-600/20 hover:bg-blue-600 hover:text-white text-blue-400 rounded-xl transition-all" title="Copy Key">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                         </svg>
                     </button>
                 </div>
             </div>
-            <p class="text-[10px] text-slate-500 mt-3 text-center italic">
-                Note: This key is stored in volatile memory. If the Space restarts, generate a new one.
-            </p>
+            <div class="mt-4 flex items-center justify-center gap-2 text-amber-500/60">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <p class="text-[9px] font-bold uppercase tracking-widest">Volatile: Key resets on Space restart</p>
+            </div>
         </div>
     </div>
+
+    <p class="mt-8 text-slate-600 text-[10px] font-bold tracking-[0.3em] uppercase">The Kwen Foundation &copy; 2026</p>
 
     <script>
         const API_URL = "https://thekwenfoundation-kwen-api.hf.space";
@@ -55,14 +104,32 @@
         const userField = document.getElementById('userField');
         const resultCard = document.getElementById('resultCard');
         const keyDisplay = document.getElementById('keyDisplay');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        // Check Server Status on Load
+        async function checkStatus() {
+            try {
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    statusDot.className = "h-2 w-2 rounded-full bg-green-500 status-pulse";
+                    statusText.innerText = "Kwen Engine: Online";
+                    statusText.className = "text-[10px] font-bold uppercase tracking-widest text-green-400";
+                }
+            } catch (e) {
+                statusDot.className = "h-2 w-2 rounded-full bg-red-500";
+                statusText.innerText = "Kwen Engine: Offline";
+                statusText.className = "text-[10px] font-bold uppercase tracking-widest text-red-400";
+            }
+        }
+        checkStatus();
 
         genBtn.onclick = async () => {
             const user = userField.value.trim();
-            if(!user) return alert("Please enter a username first.");
+            if(!user) return alert("Identify yourself (enter username).");
 
-            // UI Loading State
             genBtn.disabled = true;
-            genBtn.innerText = "Processing...";
+            genBtn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Provisioning...`;
 
             try {
                 const res = await fetch(`${API_URL}/admin/generate_key?username=${encodeURIComponent(user)}`, {
@@ -74,20 +141,23 @@
                     keyDisplay.innerText = data.key;
                     resultCard.classList.remove('hidden');
                 } else {
-                    alert("Error: API refused connection. Ensure your Space is running.");
+                    alert("The Foundation refused. Check if the Space is asleep.");
                 }
             } catch (e) {
-                alert("Connection failed. Check if CORS is enabled on the Hugging Face Space.");
+                alert("Neural link failed. (CORS or Network Error)");
             } finally {
                 genBtn.disabled = false;
-                genBtn.innerText = "Generate New API Key";
+                genBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg> Generate Access Key`;
             }
         };
 
         function copyKey() {
-            const key = keyDisplay.innerText;
-            navigator.clipboard.writeText(key);
-            alert("Key copied to clipboard!");
+            navigator.clipboard.writeText(keyDisplay.innerText);
+            const btn = event.currentTarget;
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>`;
+            setTimeout(() => {
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>`;
+            }, 2000);
         }
     </script>
 </body>

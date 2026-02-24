@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen</title>
+    <title>Kwen | Official Interface</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -34,7 +34,6 @@
             100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
         }
 
-        /* Streaming text cursor */
         .streaming::after { content: '▋'; animation: blink 1s step-end infinite; color: #3b82f6; margin-left: 2px; }
         @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
     </style>
@@ -42,7 +41,7 @@
 <body class="flex h-screen">
 
 <aside id="sidebar" class="w-64 glass border-r border-white/10 flex flex-col sidebar shrink-0">
-    <div class="p-4 border-b border-white/10 flex flex-col gap-4">
+    <div class="p-4 border-b border-white/10">
         <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
             <span>+</span> New Chat
         </button>
@@ -61,9 +60,8 @@
         </div>
         <div class="flex items-center gap-4">
             <input type="password" id="apiKey" placeholder="API Key" class="glass px-4 py-2 rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none">
-            <a href="https://hydrogenclient.github.io/Kwen/dashboard" class="p-2 glass hover:bg-white/10 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </a>
+            <div class="h-8 w-[1px] bg-white/10"></div>
+            <span id="statusIndicator" class="text-[10px] font-bold text-green-500 uppercase">Live</span>
         </div>
     </header>
 
@@ -71,7 +69,7 @@
 
     <footer class="p-6">
         <div class="max-w-4xl mx-auto relative flex items-center glass rounded-2xl p-2">
-            <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
+            <input type="text" id="userInput" placeholder="Ask Kwen anything..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
             <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
@@ -80,8 +78,10 @@
 </div>
 
 <script>
+// --- CONFIGURATION ---
 const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
+const SYSTEM_PROMPT = "You are Kwen, the official AI of the Kwen Foundation. Be insightful, concise, and helpful.";
 
 let chats = JSON.parse(localStorage.getItem('kwen_chats') || '[]');
 let currentChatId = localStorage.getItem('kwen_current_id') || null;
@@ -104,7 +104,7 @@ function init() {
 
 function createNewChat() {
     const newId = Date.now().toString();
-    const newChat = { id: newId, title: "New Chat", history: [] };
+    const newChat = { id: newId, title: "New Conversation", history: [] };
     chats.unshift(newChat);
     save();
     renderTabs();
@@ -117,12 +117,13 @@ function loadChat(id) {
     renderTabs();
     chatBox.innerHTML = '';
     const chat = chats.find(c => c.id === id);
+    
     if (chat.history.length === 0) {
-        addMessageBubble("Hello! I am Kwen. How can I help you?", false);
+        addMessageBubble("Hello! I am Kwen, specialized intelligence from the Kwen Foundation. How can I assist you today?", false);
     } else {
         chat.history.forEach(msg => {
-            const isUser = msg.startsWith("User: ");
-            addMessageBubble(isUser ? msg.replace("User: ", "") : msg.replace("Assistant: ", ""), isUser);
+            const isUser = msg.role === "user";
+            addMessageBubble(msg.content, isUser);
         });
     }
 }
@@ -134,7 +135,7 @@ function renderTabs() {
         div.className = `p-3 rounded-lg cursor-pointer text-sm truncate flex justify-between group transition-all ${chat.id === currentChatId ? 'tab-active' : 'hover:bg-white/5'}`;
         div.innerHTML = `
             <span onclick="loadChat('${chat.id}')" class="flex-1">${chat.title}</span>
-            <button onclick="deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-500 px-2">×</button>
+            <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-500 px-2">×</button>
         `;
         tabsList.appendChild(div);
     });
@@ -158,7 +159,7 @@ function addMessageBubble(text, isUser, isStreaming = false) {
     if (isUser) {
         msgDiv.textContent = text;
     } else {
-        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen</p><div class="markdown-body">${text ? marked.parse(text) : '<div class="thinking-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'}</div>`;
+        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen Intelligence</p><div class="markdown-body text-sm leading-relaxed">${text ? marked.parse(text) : '<div class="thinking-dots mt-2"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'}</div>`;
     }
     
     chatBox.appendChild(msgDiv);
@@ -171,30 +172,38 @@ async function sendMessage() {
     const text = userInput.value.trim();
     if (!text) return;
 
-    const key = apiKeyInput.value.trim() || DEFAULT_KEY;
-    localStorage.setItem('kwen_key', key);
+    const rawKey = apiKeyInput.value.trim() || DEFAULT_KEY;
+    localStorage.setItem('kwen_key', rawKey);
 
     const chat = chats.find(c => c.id === currentChatId);
     if (chat.history.length === 0) {
-        chat.title = text.substring(0, 20) + (text.length > 20 ? "..." : "");
+        chat.title = text.substring(0, 24) + (text.length > 24 ? "..." : "");
         renderTabs();
     }
 
     addMessageBubble(text, true);
-    chat.history.push(`User: ${text}`);
+    chat.history.push({ role: "user", content: text });
     userInput.value = "";
 
-    // START THINKING ANIMATION
     logo.classList.add('glow');
     const aiBubble = addMessageBubble("", false, true); 
     const container = aiBubble.querySelector('.markdown-body');
 
     try {
+        // Build prompt with context
+        const context = chat.history.slice(-4).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n");
+        const finalPrompt = `${SYSTEM_PROMPT}\n\n${context}\nAssistant:`;
+
         const response = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-            body: JSON.stringify({ prompt: chat.history.slice(-6).join("\n") + "\nAssistant:" })
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${rawKey}` 
+            },
+            body: JSON.stringify({ prompt: finalPrompt, temperature: 0.7 })
         });
+
+        if (!response.ok) throw new Error(`Status: ${response.status}`);
 
         const reader = response.body.getReader();
         let fullResponse = "";
@@ -204,23 +213,24 @@ async function sendMessage() {
             const { done, value } = await reader.read();
             if (done) break;
             
-            // REMOVE THINKING DOTS ON FIRST CHUNK
             if (firstChunk) {
                 container.innerHTML = "";
                 firstChunk = false;
             }
 
-            fullResponse += new TextDecoder().decode(value);
+            const chunk = new TextDecoder().decode(value);
+            fullResponse += chunk;
             container.innerHTML = marked.parse(fullResponse);
             chatBox.scrollTop = chatBox.scrollHeight;
             updateCopyButtons();
         }
         
         aiBubble.classList.remove('streaming');
-        chat.history.push(`Assistant: ${fullResponse}`);
+        chat.history.push({ role: "assistant", content: fullResponse });
         save();
     } catch (e) {
-        container.innerHTML = "<span class='text-red-400 font-bold'>Error: Unable to reach Kwen Foundation.</span>";
+        console.error(e);
+        container.innerHTML = `<span class='text-red-400 font-bold'>Error: ${e.message}. Check API Key and Space Status.</span>`;
     } finally {
         logo.classList.remove('glow');
     }
@@ -235,7 +245,7 @@ function updateCopyButtons() {
         btn.onclick = () => {
             const codeText = pre.innerText.replace('Copy', '').trim();
             navigator.clipboard.writeText(codeText);
-            btn.innerText = 'Done!';
+            btn.innerText = 'Copied!';
             setTimeout(() => btn.innerText = 'Copy', 2000);
         };
         pre.appendChild(btn);

@@ -15,27 +15,24 @@
         .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
         .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); position: relative; }
         
-        /* The Thinking Box */
         .thought-block { background: rgba(15, 23, 42, 0.6); border-left: 3px solid #3b82f6; padding: 12px; margin: 8px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #94a3b8; font-size: 0.85rem; line-height: 1.4; }
         
-        /* Flickering Cursor */
         .streaming::after { content: '▋'; animation: blink 1s step-end infinite; color: #3b82f6; margin-left: 2px; }
         @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
         
         .tab-active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
         pre { background: #000 !important; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; overflow-x: auto; }
         
-        /* Copy Button Style */
-        .copy-btn { opacity: 0; transition: opacity 0.2s; position: absolute; top: 10px; right: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .copy-btn { opacity: 0; transition: opacity 0.2s; position: absolute; top: 10px; right: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
         .ai-msg:hover .copy-btn { opacity: 1; }
-        .copy-btn:hover { background: rgba(59, 130, 246, 0.4); }
     </style>
 </head>
 <body>
 
 <aside class="w-64 glass border-r border-white/10 flex flex-col shrink-0 z-20">
-    <div class="p-4 border-b border-white/10">
-        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm transition-all active:scale-95 shadow-lg shadow-blue-900/20">+ New Chat</button>
+    <div class="p-4 border-b border-white/10 flex flex-col gap-2">
+        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm transition-all">+ New Chat</button>
+        <button onclick="clearCurrentChat()" class="w-full py-2 px-4 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg font-bold text-xs transition-all">Clear History</button>
     </div>
     <div id="tabsList" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1"></div>
     <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center font-bold tracking-widest uppercase">Kwen Foundation</div>
@@ -52,7 +49,7 @@
         </div>
         <div class="flex items-center gap-2">
             <span class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">System Active</span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Memory Active</span>
         </div>
     </header>
 
@@ -60,7 +57,7 @@
 
     <footer class="p-6 glass border-t border-white/10">
         <div class="max-w-4xl mx-auto flex items-center bg-slate-800/50 rounded-2xl p-2 border border-white/5">
-            <input type="text" id="userInput" placeholder="Ask Kwen..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
+            <input type="text" id="userInput" placeholder="Message Kwen..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
             <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all active:scale-90">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
@@ -90,12 +87,17 @@ function createNewChat() {
     save(); renderTabs(); loadChat(newId);
 }
 
+function clearCurrentChat() {
+    const chat = chats.find(c => c.id === currentChatId);
+    if (chat) { chat.history = []; save(); loadChat(currentChatId); }
+}
+
 function loadChat(id) {
     currentChatId = id; localStorage.setItem('kwen_current_id', id);
     renderTabs(); chatBox.innerHTML = '';
     const chat = chats.find(c => c.id === id);
     if (!chat) return;
-    if (chat.history.length === 0) addBubble("Hello, I am Kwen. How can I help you today?", false);
+    if (chat.history.length === 0) addBubble("Kwen Intelligence Online. Memory stabilized. How can I help?", false);
     else chat.history.forEach(m => addBubble(m.content, m.role === "user"));
 }
 
@@ -119,22 +121,13 @@ function formatAIResponse(text) {
     return marked.parse(formatted);
 }
 
-// Copy Functionality
 async function copyToClipboard(text, btn) {
-    // Remove think tags from the copy if you only want the answer
     const cleanText = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
     try {
         await navigator.clipboard.writeText(cleanText);
-        const originalText = btn.innerText;
         btn.innerText = "COPIED!";
-        btn.style.borderColor = "#22c55e";
-        setTimeout(() => {
-            btn.innerText = originalText;
-            btn.style.borderColor = "";
-        }, 2000);
-    } catch (err) {
-        console.error('Failed to copy: ', err);
-    }
+        setTimeout(() => btn.innerText = "COPY", 2000);
+    } catch (err) {}
 }
 
 function addBubble(text, isUser, isStreaming = false) {
@@ -146,7 +139,7 @@ function addBubble(text, isUser, isStreaming = false) {
     } else {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'copy-btn';
-        copyBtn.innerText = 'Copy';
+        copyBtn.innerText = 'COPY';
         copyBtn.onclick = () => copyToClipboard(text, copyBtn);
         
         div.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen AI</p>
@@ -155,7 +148,7 @@ function addBubble(text, isUser, isStreaming = false) {
     }
     
     chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     return div;
 }
 
@@ -164,6 +157,11 @@ async function sendMessage() {
     
     const chat = chats.find(c => c.id === currentChatId);
     if (chat.history.length === 0) { chat.title = val.substring(0, 20); renderTabs(); }
+
+    // BUILD MEMORY PROMPT:
+    // We combine the last 5 messages so Kwen has context.
+    const memory = chat.history.slice(-5).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n");
+    const fullPrompt = memory ? `${memory}\nUser: ${val}` : val;
 
     addBubble(val, true);
     chat.history.push({ role: "user", content: val });
@@ -177,9 +175,9 @@ async function sendMessage() {
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + INTERNAL_KEY },
-            body: JSON.stringify({ prompt: val })
+            body: JSON.stringify({ prompt: fullPrompt })
         });
-        if (!res.ok) throw new Error("Connection Failed");
+        if (!res.ok) throw new Error("Failed");
 
         const reader = res.body.getReader();
         let full = "";
@@ -188,7 +186,6 @@ async function sendMessage() {
             if (done) break;
             full += new TextDecoder().decode(value);
             container.innerHTML = formatAIResponse(full);
-            // Update the copy button's data on the fly
             copyBtn.onclick = () => copyToClipboard(full, copyBtn);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -197,7 +194,7 @@ async function sendMessage() {
         save();
     } catch (e) {
         aiBubble.classList.remove('streaming');
-        container.innerHTML = `<span class="text-red-400 font-bold">Error: Kwen is currently unavailable.</span>`;
+        container.innerHTML = `<span class="text-red-400 font-bold">Error: Kwen disconnected.</span>`;
     }
 }
 

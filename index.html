@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen | Official Interface</title>
+    <title>Kwen | AI</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,64 +13,42 @@
         .chat-container { height: calc(100vh - 160px); scrollbar-width: thin; scrollbar-color: #334155 transparent; }
         .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
         .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); }
-        code { background: #0f172a; color: #93c5fd; padding: 0.2rem 0.4rem; border-radius: 6px; font-size: 0.9em; }
+        
+        /* Flickering Cursor Animation */
+        .streaming::after { content: '▋'; animation: blink 1s step-end infinite; color: #3b82f6; margin-left: 2px; }
+        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+        
         pre { background: #000 !important; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin: 1rem 0; position: relative; overflow-x: auto; }
         .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; }
         .sidebar { transition: all 0.3s ease; }
         .tab-active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
-        
-        /* Thinking Animation */
-        .thinking-dots { display: inline-flex; gap: 3px; }
-        .dot { width: 4px; height: 4px; background: #3b82f6; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        
-        /* Logo Glow during Thinking */
-        .glow { animation: pulse-glow 2s infinite; }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
-            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); transform: scale(1.05); }
-            100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
-        }
-
-        .streaming::after { content: '▋'; animation: blink 1s step-end infinite; color: #3b82f6; margin-left: 2px; }
-        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
     </style>
 </head>
 <body class="flex h-screen">
 
 <aside id="sidebar" class="w-64 glass border-r border-white/10 flex flex-col sidebar shrink-0">
     <div class="p-4 border-b border-white/10">
-        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">
-            <span>+</span> New Chat
-        </button>
+        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all">+ New Chat</button>
     </div>
     <div id="tabsList" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1"></div>
-    <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center font-bold uppercase tracking-widest">
-        Kwen Foundation
-    </div>
+    <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center font-bold tracking-widest uppercase">Kwen Foundation</div>
 </aside>
 
 <div class="flex-1 flex flex-col relative">
     <header class="flex justify-between items-center py-4 px-6 border-b border-white/10 glass">
         <div class="flex items-center gap-3">
-            <div id="logo" class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm transition-all duration-300">K</div>
+            <div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm">K</div>
             <h1 class="text-xl font-extrabold tracking-tighter">KWEN</h1>
         </div>
-        <div class="flex items-center gap-4">
-            <input type="password" id="apiKey" placeholder="API Key" class="glass px-4 py-2 rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none">
-            <div class="h-8 w-[1px] bg-white/10"></div>
-            <span id="statusIndicator" class="text-[10px] font-bold text-green-500 uppercase">Live</span>
-        </div>
+        <input type="password" id="apiKey" placeholder="API Key" class="glass px-4 py-2 rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none">
     </header>
 
     <main id="chatBox" class="chat-container overflow-y-auto flex flex-col gap-6 py-8 px-6"></main>
 
     <footer class="p-6">
-        <div class="max-w-4xl mx-auto relative flex items-center glass rounded-2xl p-2">
-            <input type="text" id="userInput" placeholder="Ask Kwen anything..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
-            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all active:scale-95">
+        <div class="max-w-4xl mx-auto flex items-center glass rounded-2xl p-2">
+            <input type="text" id="userInput" placeholder="Message Kwen..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
+            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
             </button>
         </div>
@@ -78,10 +56,8 @@
 </div>
 
 <script>
-// --- CONFIGURATION ---
 const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
-const SYSTEM_PROMPT = "You are Kwen, the official AI of the Kwen Foundation. Be insightful, concise, and helpful.";
 
 let chats = JSON.parse(localStorage.getItem('kwen_chats') || '[]');
 let currentChatId = localStorage.getItem('kwen_current_id') || null;
@@ -90,171 +66,91 @@ const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const tabsList = document.getElementById('tabsList');
 const apiKeyInput = document.getElementById('apiKey');
-const logo = document.getElementById('logo');
 
 function init() {
     apiKeyInput.value = localStorage.getItem('kwen_key') || DEFAULT_KEY;
-    if (chats.length === 0) {
-        createNewChat();
-    } else {
-        renderTabs();
-        loadChat(currentChatId || chats[0].id);
-    }
+    if (chats.length === 0) createNewChat(); else { renderTabs(); loadChat(currentChatId || chats[0].id); }
 }
 
 function createNewChat() {
     const newId = Date.now().toString();
-    const newChat = { id: newId, title: "New Conversation", history: [] };
-    chats.unshift(newChat);
-    save();
-    renderTabs();
-    loadChat(newId);
+    chats.unshift({ id: newId, title: "New Conversation", history: [] });
+    save(); renderTabs(); loadChat(newId);
 }
 
 function loadChat(id) {
-    currentChatId = id;
-    localStorage.setItem('kwen_current_id', id);
-    renderTabs();
-    chatBox.innerHTML = '';
+    currentChatId = id; localStorage.setItem('kwen_current_id', id);
+    renderTabs(); chatBox.innerHTML = '';
     const chat = chats.find(c => c.id === id);
-    
-    if (chat.history.length === 0) {
-        addMessageBubble("Hello! I am Kwen, specialized intelligence from the Kwen Foundation. How can I assist you today?", false);
-    } else {
-        chat.history.forEach(msg => {
-            const isUser = msg.role === "user";
-            addMessageBubble(msg.content, isUser);
-        });
-    }
+    if (chat.history.length === 0) addBubble("Hello, I am Kwen. How can I help?", false);
+    else chat.history.forEach(m => addBubble(m.content, m.role === "user"));
 }
 
 function renderTabs() {
     tabsList.innerHTML = '';
     chats.forEach(chat => {
         const div = document.createElement('div');
-        div.className = `p-3 rounded-lg cursor-pointer text-sm truncate flex justify-between group transition-all ${chat.id === currentChatId ? 'tab-active' : 'hover:bg-white/5'}`;
-        div.innerHTML = `
-            <span onclick="loadChat('${chat.id}')" class="flex-1">${chat.title}</span>
-            <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-500 px-2">×</button>
-        `;
+        div.className = `p-3 rounded-lg cursor-pointer text-sm truncate flex justify-between ${chat.id === currentChatId ? 'tab-active' : 'hover:bg-white/5'}`;
+        div.innerHTML = `<span onclick="loadChat('${chat.id}')" class="flex-1">${chat.title}</span>`;
         tabsList.appendChild(div);
     });
 }
 
-function deleteChat(id) {
-    chats = chats.filter(c => c.id !== id);
-    if (currentChatId === id) currentChatId = chats[0]?.id || null;
-    save();
-    if (!currentChatId) createNewChat(); else { renderTabs(); loadChat(currentChatId); }
-}
+function save() { localStorage.setItem('kwen_chats', JSON.stringify(chats)); }
 
-function save() {
-    localStorage.setItem('kwen_chats', JSON.stringify(chats));
-}
-
-function addMessageBubble(text, isUser, isStreaming = false) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `px-5 py-3 max-w-[85%] shadow-lg ${isUser ? 'user-msg' : 'ai-msg'} ${isStreaming ? 'streaming' : ''}`;
-    
-    if (isUser) {
-        msgDiv.textContent = text;
-    } else {
-        msgDiv.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen Intelligence</p><div class="markdown-body text-sm leading-relaxed">${text ? marked.parse(text) : '<div class="thinking-dots mt-2"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'}</div>`;
-    }
-    
-    chatBox.appendChild(msgDiv);
-    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-    updateCopyButtons();
-    return msgDiv;
+function addBubble(text, isUser, isStreaming = false) {
+    const div = document.createElement('div');
+    div.className = `px-5 py-3 max-w-[85%] shadow-lg ${isUser ? 'user-msg' : 'ai-msg'} ${isStreaming ? 'streaming' : ''}`;
+    div.innerHTML = isUser ? text : `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen</p><div class="markdown-body">${text ? marked.parse(text) : ''}</div>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
 }
 
 async function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    const rawKey = apiKeyInput.value.trim() || DEFAULT_KEY;
-    localStorage.setItem('kwen_key', rawKey);
-
+    const val = userInput.value.trim(); if (!val) return;
+    const key = apiKeyInput.value.trim() || DEFAULT_KEY;
+    localStorage.setItem('kwen_key', key);
+    
     const chat = chats.find(c => c.id === currentChatId);
-    if (chat.history.length === 0) {
-        chat.title = text.substring(0, 24) + (text.length > 24 ? "..." : "");
-        renderTabs();
-    }
+    if (chat.history.length === 0) { chat.title = val.substring(0, 20); renderTabs(); }
 
-    addMessageBubble(text, true);
-    chat.history.push({ role: "user", content: text });
-    userInput.value = "";
+    addBubble(val, true);
+    chat.history.push({ role: "user", content: val });
+    userInput.value = '';
 
-    logo.classList.add('glow');
-    const aiBubble = addMessageBubble("", false, true); 
+    const aiBubble = addBubble("", false, true);
     const container = aiBubble.querySelector('.markdown-body');
 
     try {
-        // Build prompt with context
-        const context = chat.history.slice(-4).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n");
-        const finalPrompt = `${SYSTEM_PROMPT}\n\n${context}\nAssistant:`;
-
-        const response = await fetch(API_URL, {
+        const res = await fetch(API_URL, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json', 
-                'Authorization': `Bearer ${rawKey}` 
-            },
-            body: JSON.stringify({ prompt: finalPrompt, temperature: 0.7 })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({ prompt: val })
         });
+        if (!res.ok) throw new Error(res.status);
 
-        if (!response.ok) throw new Error(`Status: ${response.status}`);
-
-        const reader = response.body.getReader();
-        let fullResponse = "";
-        let firstChunk = true;
-
+        const reader = res.body.getReader();
+        let full = "";
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
-            if (firstChunk) {
-                container.innerHTML = "";
-                firstChunk = false;
-            }
-
-            const chunk = new TextDecoder().decode(value);
-            fullResponse += chunk;
-            container.innerHTML = marked.parse(fullResponse);
+            full += new TextDecoder().decode(value);
+            container.innerHTML = marked.parse(full);
             chatBox.scrollTop = chatBox.scrollHeight;
-            updateCopyButtons();
         }
-        
         aiBubble.classList.remove('streaming');
-        chat.history.push({ role: "assistant", content: fullResponse });
+        chat.history.push({ role: "assistant", content: full });
         save();
     } catch (e) {
-        console.error(e);
-        container.innerHTML = `<span class='text-red-400 font-bold'>Error: ${e.message}. Check API Key and Space Status.</span>`;
-    } finally {
-        logo.classList.remove('glow');
+        aiBubble.classList.remove('streaming');
+        container.innerHTML = `<span class="text-red-400">Error: ${e.message}</span>`;
     }
-}
-
-function updateCopyButtons() {
-    document.querySelectorAll('pre').forEach(pre => {
-        if (pre.querySelector('.copy-btn')) return;
-        const btn = document.createElement('button');
-        btn.className = 'copy-btn';
-        btn.innerText = 'Copy';
-        btn.onclick = () => {
-            const codeText = pre.innerText.replace('Copy', '').trim();
-            navigator.clipboard.writeText(codeText);
-            btn.innerText = 'Copied!';
-            setTimeout(() => btn.innerText = 'Copy', 2000);
-        };
-        pre.appendChild(btn);
-    });
 }
 
 init();
 document.getElementById('sendBtn').onclick = sendMessage;
-userInput.onkeydown = (e) => { if(e.key === "Enter") sendMessage(); };
+userInput.onkeydown = (e) => e.key === 'Enter' && sendMessage();
 </script>
 </body>
 </html>

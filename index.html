@@ -13,7 +13,7 @@
         .chat-container { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #334155 transparent; }
         
         .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
-        .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); position: relative; }
         
         /* The Thinking Box */
         .thought-block { background: rgba(15, 23, 42, 0.6); border-left: 3px solid #3b82f6; padding: 12px; margin: 8px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #94a3b8; font-size: 0.85rem; line-height: 1.4; }
@@ -24,7 +24,11 @@
         
         .tab-active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
         pre { background: #000 !important; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; overflow-x: auto; }
-        code { color: #93c5fd; }
+        
+        /* Copy Button Style */
+        .copy-btn { opacity: 0; transition: opacity 0.2s; position: absolute; top: 10px; right: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .ai-msg:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background: rgba(59, 130, 246, 0.4); }
     </style>
 </head>
 <body>
@@ -65,7 +69,6 @@
 </div>
 
 <script>
-// Internal Key - Users won't see this in the UI
 const INTERNAL_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 
@@ -116,6 +119,24 @@ function formatAIResponse(text) {
     return marked.parse(formatted);
 }
 
+// Copy Functionality
+async function copyToClipboard(text, btn) {
+    // Remove think tags from the copy if you only want the answer
+    const cleanText = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    try {
+        await navigator.clipboard.writeText(cleanText);
+        const originalText = btn.innerText;
+        btn.innerText = "COPIED!";
+        btn.style.borderColor = "#22c55e";
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.borderColor = "";
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+}
+
 function addBubble(text, isUser, isStreaming = false) {
     const div = document.createElement('div');
     div.className = `px-5 py-3 max-w-[85%] shadow-lg ${isUser ? 'user-msg' : 'ai-msg'} ${isStreaming ? 'streaming' : ''}`;
@@ -123,9 +144,14 @@ function addBubble(text, isUser, isStreaming = false) {
     if (isUser) {
         div.textContent = text;
     } else {
-        div.innerHTML = `
-            <p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen AI</p>
-            <div class="markdown-body text-sm">${text ? formatAIResponse(text) : ''}</div>`;
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.innerText = 'Copy';
+        copyBtn.onclick = () => copyToClipboard(text, copyBtn);
+        
+        div.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen AI</p>
+                         <div class="markdown-body text-sm">${text ? formatAIResponse(text) : ''}</div>`;
+        div.appendChild(copyBtn);
     }
     
     chatBox.appendChild(div);
@@ -145,6 +171,7 @@ async function sendMessage() {
 
     const aiBubble = addBubble("", false, true);
     const container = aiBubble.querySelector('.markdown-body');
+    const copyBtn = aiBubble.querySelector('.copy-btn');
 
     try {
         const res = await fetch(API_URL, {
@@ -161,6 +188,8 @@ async function sendMessage() {
             if (done) break;
             full += new TextDecoder().decode(value);
             container.innerHTML = formatAIResponse(full);
+            // Update the copy button's data on the fly
+            copyBtn.onclick = () => copyToClipboard(full, copyBtn);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
         aiBubble.classList.remove('streaming');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen | AI</title>
+    <title>Kwen | Official Interface</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -12,7 +12,6 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .chat-container { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #334155 transparent; }
         
-        /* Message Styles */
         .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
         .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); }
         
@@ -42,9 +41,15 @@
     <header class="flex justify-between items-center py-4 px-6 border-b border-white/10 glass">
         <div class="flex items-center gap-3">
             <div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm">K</div>
-            <h1 class="text-xl font-extrabold tracking-tighter">KWEN</h1>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tighter leading-none">KWEN</h1>
+                <span class="text-[8px] text-blue-500 font-bold uppercase tracking-[0.2em]">Intelligence</span>
+            </div>
         </div>
-        <input type="password" id="apiKey" placeholder="API Key" class="glass px-4 py-2 rounded-lg text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none text-white">
+        <div class="flex items-center gap-2">
+            <span class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">System Active</span>
+        </div>
     </header>
 
     <main id="chatBox" class="chat-container flex flex-col gap-6 py-8 px-6"></main>
@@ -60,7 +65,8 @@
 </div>
 
 <script>
-const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
+// Internal Key - Users won't see this in the UI
+const INTERNAL_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
 
 let chats = JSON.parse(localStorage.getItem('kwen_chats') || '[]');
@@ -69,17 +75,8 @@ let currentChatId = localStorage.getItem('kwen_current_id') || null;
 const chatBox = document.getElementById('chatBox');
 const userInput = document.getElementById('userInput');
 const tabsList = document.getElementById('tabsList');
-const apiKeyInput = document.getElementById('apiKey');
 
 function init() {
-    let savedKey = localStorage.getItem('kwen_key');
-    // If key is old/broken, force the default key
-    if (!savedKey || !savedKey.startsWith("kwen_")) {
-        savedKey = DEFAULT_KEY;
-        localStorage.setItem('kwen_key', DEFAULT_KEY);
-    }
-    apiKeyInput.value = savedKey;
-
     if (chats.length === 0) createNewChat(); 
     else { renderTabs(); loadChat(currentChatId || chats[0].id); }
 }
@@ -95,7 +92,7 @@ function loadChat(id) {
     renderTabs(); chatBox.innerHTML = '';
     const chat = chats.find(c => c.id === id);
     if (!chat) return;
-    if (chat.history.length === 0) addBubble("Hello, I am Kwen. How can I help?", false);
+    if (chat.history.length === 0) addBubble("Hello, I am Kwen. How can I help you today?", false);
     else chat.history.forEach(m => addBubble(m.content, m.role === "user"));
 }
 
@@ -113,7 +110,6 @@ function renderTabs() {
 function save() { localStorage.setItem('kwen_chats', JSON.stringify(chats)); }
 
 function formatAIResponse(text) {
-    // Replace <think> content with a styled block
     let formatted = text.replace(/<think>([\s\S]*?)<\/think>/g, (match, p1) => {
         return `<div class="thought-block">${p1.trim()}</div>`;
     });
@@ -128,7 +124,7 @@ function addBubble(text, isUser, isStreaming = false) {
         div.textContent = text;
     } else {
         div.innerHTML = `
-            <p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen Intelligence</p>
+            <p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen AI</p>
             <div class="markdown-body text-sm">${text ? formatAIResponse(text) : ''}</div>`;
     }
     
@@ -139,8 +135,6 @@ function addBubble(text, isUser, isStreaming = false) {
 
 async function sendMessage() {
     const val = userInput.value.trim(); if (!val) return;
-    const key = apiKeyInput.value.trim();
-    localStorage.setItem('kwen_key', key);
     
     const chat = chats.find(c => c.id === currentChatId);
     if (chat.history.length === 0) { chat.title = val.substring(0, 20); renderTabs(); }
@@ -155,10 +149,10 @@ async function sendMessage() {
     try {
         const res = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + INTERNAL_KEY },
             body: JSON.stringify({ prompt: val })
         });
-        if (!res.ok) throw new Error(`Auth Failed (${res.status})`);
+        if (!res.ok) throw new Error("Connection Failed");
 
         const reader = res.body.getReader();
         let full = "";
@@ -174,7 +168,7 @@ async function sendMessage() {
         save();
     } catch (e) {
         aiBubble.classList.remove('streaming');
-        container.innerHTML = `<span class="text-red-400 font-bold">Error: ${e.message}</span>`;
+        container.innerHTML = `<span class="text-red-400 font-bold">Error: Kwen is currently unavailable.</span>`;
     }
 }
 

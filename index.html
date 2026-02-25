@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen Foundation | 4B LM</title>
+    <title>Kwen</title>
     <style>
         :root {
             --bg-color: #e5e5e5;
@@ -35,7 +35,6 @@
         .kwen-label { font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
         .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
 
-        /* Custom ▋ Cursor */
         .cursor {
             display: inline-block; background-color: var(--text-color);
             width: 10px; height: 1.2rem; margin-left: 4px;
@@ -61,13 +60,13 @@
 <body>
 
 <div class="container">
-    <h1>Hello. I'm <strong>Kwen 4B</strong>.</h1>
-    <p>The <span class="highlight">Kwen Foundation</span> Docker Engine. <span class="highlight">CORS is ON.</span></p>
+    <h1>Hello. I'm <strong>Kwen</strong>.</h1>
+    <p>The <span class="highlight">Kwen Foundation</span><span class="highlight">Status: Online</span></p>
 
     <div id="chat-window">
         <div class="message">
             <span class="kwen-label">Kwen:</span>
-            <span>Docker API linked. Awaiting input.</span>
+            <span>FastAPI Stream Engine linked. Awaiting logic request...</span>
         </div>
     </div>
 
@@ -82,8 +81,9 @@
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // YOUR DOCKER SPACE ENDPOINT
-    const API_URL = "https://thekwenfoundation-kwen-api.hf.space/predict"; 
+    // CONFIG FROM YOUR BACKEND
+    const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat"; 
+    const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 
     async function handleSend() {
         const text = userInput.value.trim();
@@ -99,18 +99,36 @@
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ data: [text] }) // Most HF Docker APIs expect a 'data' array
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${DEFAULT_KEY}` // Added your internal auth
+                },
+                body: JSON.stringify({ 
+                    prompt: text,
+                    max_tokens: 512,
+                    temperature: 0.6
+                })
             });
 
-            const result = await response.json();
-            
-            // Adjust 'result.data[0]' based on how your Docker app returns the JSON
-            content.innerText = result.data ? result.data[0] : result.response || result.message;
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            // HANDLING THE STREAM
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            content.innerText = ""; // Clear cursor to start stream
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                content.innerText += chunk; // Append tokens as they arrive
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
             
         } catch (err) {
             console.error(err);
-            content.innerText = "System Error: Check if Space is 'Running'.";
+            content.innerText = "System Error: " + err.message;
         }
     }
 

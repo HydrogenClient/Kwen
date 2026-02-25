@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kwen Foundation | 4B LM</title>
     <style>
-        /* The "Steve Krueger" Monospace Aesthetic */
         :root {
             --bg-color: #e5e5e5;
             --text-color: #1a1a1a;
@@ -18,125 +17,115 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Courier New', Courier, monospace;
-            line-height: 1.6;
-            margin: 0;
-            padding: 40px;
-            display: flex;
-            justify-content: center;
+            margin: 0; padding: 40px; display: flex; justify-content: center;
         }
 
-        .container {
-            max-width: 800px;
-            width: 100%;
-        }
+        .container { max-width: 800px; width: 100%; }
+        h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 2rem; }
+        h1 strong { font-weight: 900; }
+        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; }
 
-        h1 {
-            font-weight: normal;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        h1 strong {
-            font-weight: 900;
-        }
-
-        p {
-            margin-bottom: 1.5rem;
-        }
-
-        /* The Highlight Box from the Image */
-        .highlight {
-            background-color: var(--accent-box);
-            color: var(--accent-text);
-            padding: 2px 6px;
-            font-weight: bold;
-        }
-
-        /* Chat Section */
         #chat-window {
-            margin-top: 3rem;
+            margin-top: 2rem; height: 500px; overflow-y: auto;
             border-top: 1px solid var(--border-color);
-            padding-top: 2rem;
+            padding: 20px 0; display: flex; flex-direction: column; gap: 20px;
         }
 
-        .message {
-            margin-bottom: 1rem;
-            white-space: pre-wrap;
-        }
+        .message { white-space: pre-wrap; animation: fadeIn 0.3s ease; line-height: 1.5; }
+        .kwen-label { font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
 
-        .kwen-label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* The Custom Typing Indicator ▋ */
+        /* Custom ▋ Cursor */
         .cursor {
-            display: inline-block;
-            background-color: var(--text-color);
-            width: 10px;
-            height: 1.2rem;
-            margin-left: 4px;
-            animation: blink 0.8s infinite;
-            vertical-align: middle;
+            display: inline-block; background-color: var(--text-color);
+            width: 10px; height: 1.2rem; margin-left: 4px;
+            animation: blink 0.8s infinite; vertical-align: middle;
         }
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0; }
-            100% { opacity: 1; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-area { margin-top: 20px; display: flex; gap: 10px; }
+        #user-input {
+            flex-grow: 1; background: transparent; border: 1px solid var(--text-color);
+            padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 1rem; outline: none;
         }
 
-        /* Input Area */
-        .input-wrapper {
-            margin-top: 2rem;
-            position: relative;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--text-color);
-            padding: 12px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1rem;
-            color: var(--text-color);
-            outline: none;
-        }
-
-        input[type="text"]::placeholder {
-            color: #888;
-        }
-
-        /* Social Icons Simulation */
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin: 2rem 0;
-            font-size: 1.2rem;
-            opacity: 0.7;
+        #send-btn {
+            background: var(--accent-box); color: var(--accent-text);
+            border: none; padding: 0 20px; cursor: pointer;
+            font-family: 'Courier New', Courier, monospace; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Hello. I'm <strong>Kwen</strong>.</h1>
-    
-    <p>I'm the primary intelligence of the <span class="highlight">Kwen Foundation</span>, 
-    an LM built on the Qwen3 architecture.</p>
+    <h1>Hello. I'm <strong>Kwen 4B</strong>.</h1>
+    <p>The <span class="highlight">Kwen Foundation</span> Docker Engine. <span class="highlight">CORS is ON.</span></p>
 
     <div id="chat-window">
         <div class="message">
             <span class="kwen-label">Kwen:</span>
-            <span>Ready for your next instruction.<span class="cursor">▋</span></span>
+            <span>Docker API linked. Awaiting input.</span>
         </div>
     </div>
 
-    <div class="input-wrapper">
-        <input type="text" placeholder="Type your message..">
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+        <button id="send-btn">SEND</button>
     </div>
 </div>
+
+<script>
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // YOUR DOCKER SPACE ENDPOINT
+    const API_URL = "https://thekwenfoundation-kwen-api.hf.space/predict"; 
+
+    async function handleSend() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        appendMessage("User", text);
+        userInput.value = "";
+        
+        const kwenDiv = appendMessage("Kwen", "");
+        const content = kwenDiv.querySelector('.content');
+        content.innerHTML = '<span class="cursor">▋</span>';
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: [text] }) // Most HF Docker APIs expect a 'data' array
+            });
+
+            const result = await response.json();
+            
+            // Adjust 'result.data[0]' based on how your Docker app returns the JSON
+            content.innerText = result.data ? result.data[0] : result.response || result.message;
+            
+        } catch (err) {
+            console.error(err);
+            content.innerText = "System Error: Check if Space is 'Running'.";
+        }
+    }
+
+    function appendMessage(sender, text) {
+        const div = document.createElement('div');
+        div.className = 'message';
+        div.innerHTML = `<span class="${sender.toLowerCase()}-label">${sender}:</span><span class="content">${text}</span>`;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return div;
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+</script>
 
 </body>
 </html>

@@ -3,204 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kwen | Official Interface</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Kwen Foundation | 4B LM</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { background: #0f172a; color: #e2e8f0; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; width: 100vw; overflow: hidden; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .chat-container { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #334155 transparent; }
-        
-        .user-msg { background: linear-gradient(135deg, #3b82f6, #2563eb); align-self: flex-end; border-radius: 18px 18px 4px 18px; }
-        .ai-msg { background: rgba(30, 41, 59, 0.8); align-self: flex-start; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(255, 255, 255, 0.1); position: relative; }
-        
-        .thought-block { background: rgba(15, 23, 42, 0.6); border-left: 3px solid #3b82f6; padding: 12px; margin: 8px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #94a3b8; font-size: 0.85rem; line-height: 1.4; }
-        
-        .streaming::after { content: '▋'; animation: blink 1s step-end infinite; color: #3b82f6; margin-left: 2px; }
-        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
-        
-        .tab-active { background: rgba(59, 130, 246, 0.2); border-left: 4px solid #3b82f6; }
-        pre { background: #000 !important; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; overflow-x: auto; }
-        
-        .copy-btn { opacity: 0; transition: opacity 0.2s; position: absolute; top: 10px; right: 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; padding: 4px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
-        .ai-msg:hover .copy-btn { opacity: 1; }
+        /* The "Steve Krueger" Monospace Aesthetic */
+        :root {
+            --bg-color: #e5e5e5;
+            --text-color: #1a1a1a;
+            --accent-box: #1a1a1a;
+            --accent-text: #ffffff;
+            --border-color: #d1d1d1;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-weight: normal;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 strong {
+            font-weight: 900;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+        }
+
+        /* The Highlight Box from the Image */
+        .highlight {
+            background-color: var(--accent-box);
+            color: var(--accent-text);
+            padding: 2px 6px;
+            font-weight: bold;
+        }
+
+        /* Chat Section */
+        #chat-window {
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .kwen-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* The Custom Typing Indicator ▋ */
+        .cursor {
+            display: inline-block;
+            background-color: var(--text-color);
+            width: 10px;
+            height: 1.2rem;
+            margin-left: 4px;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Input Area */
+        .input-wrapper {
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--text-color);
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        input[type="text"]::placeholder {
+            color: #888;
+        }
+
+        /* Social Icons Simulation */
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin: 2rem 0;
+            font-size: 1.2rem;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
 
-<aside class="w-64 glass border-r border-white/10 flex flex-col shrink-0 z-20">
-    <div class="p-4 border-b border-white/10 flex flex-col gap-2">
-        <button onclick="createNewChat()" class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm transition-all">+ New Chat</button>
-        <button onclick="clearCurrentChat()" class="w-full py-2 px-4 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg font-bold text-xs transition-all">Clear History</button>
+<div class="container">
+    <h1>Hello. I'm <strong>Kwen</strong>.</h1>
+    
+    <p>I'm the primary intelligence of the <span class="highlight">Kwen Foundation</span>, 
+    an LM built on the Qwen3 architecture.</p>
+
+    <div id="chat-window">
+        <div class="message">
+            <span class="kwen-label">Kwen:</span>
+            <span>Ready for your next instruction.<span class="cursor">▋</span></span>
+        </div>
     </div>
-    <div id="tabsList" class="flex-1 overflow-y-auto p-2 flex flex-col gap-1"></div>
-    <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center font-bold tracking-widest uppercase">Kwen Foundation</div>
-</aside>
 
-<div class="flex-1 flex flex-col relative z-10">
-    <header class="flex justify-between items-center py-4 px-6 border-b border-white/10 glass">
-        <div class="flex items-center gap-3">
-            <div class="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm">K</div>
-            <div>
-                <h1 class="text-xl font-extrabold tracking-tighter leading-none">KWEN</h1>
-                <span class="text-[8px] text-blue-500 font-bold uppercase tracking-[0.2em]">Intelligence</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Memory Active</span>
-        </div>
-    </header>
-
-    <main id="chatBox" class="chat-container flex flex-col gap-6 py-8 px-6"></main>
-
-    <footer class="p-6 glass border-t border-white/10">
-        <div class="max-w-4xl mx-auto flex items-center bg-slate-800/50 rounded-2xl p-2 border border-white/5">
-            <input type="text" id="userInput" placeholder="Message Kwen..." autocomplete="off" class="flex-1 bg-transparent border-none px-4 py-3 focus:outline-none text-white">
-            <button id="sendBtn" class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all active:scale-90">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-            </button>
-        </div>
-    </footer>
+    <div class="input-wrapper">
+        <input type="text" placeholder="Type your message..">
+    </div>
 </div>
 
-<script>
-const INTERNAL_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
-const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat";
-
-let chats = JSON.parse(localStorage.getItem('kwen_chats') || '[]');
-let currentChatId = localStorage.getItem('kwen_current_id') || null;
-
-const chatBox = document.getElementById('chatBox');
-const userInput = document.getElementById('userInput');
-const tabsList = document.getElementById('tabsList');
-
-function init() {
-    if (chats.length === 0) createNewChat(); 
-    else { renderTabs(); loadChat(currentChatId || chats[0].id); }
-}
-
-function createNewChat() {
-    const newId = Date.now().toString();
-    chats.unshift({ id: newId, title: "New Conversation", history: [] });
-    save(); renderTabs(); loadChat(newId);
-}
-
-function clearCurrentChat() {
-    const chat = chats.find(c => c.id === currentChatId);
-    if (chat) { chat.history = []; save(); loadChat(currentChatId); }
-}
-
-function loadChat(id) {
-    currentChatId = id; localStorage.setItem('kwen_current_id', id);
-    renderTabs(); chatBox.innerHTML = '';
-    const chat = chats.find(c => c.id === id);
-    if (!chat) return;
-    if (chat.history.length === 0) addBubble("Kwen Intelligence Online. Memory stabilized. How can I help?", false);
-    else chat.history.forEach(m => addBubble(m.content, m.role === "user"));
-}
-
-function renderTabs() {
-    tabsList.innerHTML = '';
-    chats.forEach(chat => {
-        const div = document.createElement('div');
-        div.className = `p-3 rounded-lg cursor-pointer text-sm truncate flex justify-between ${chat.id === currentChatId ? 'tab-active' : 'hover:bg-white/5'}`;
-        div.innerHTML = `<span class="flex-1">${chat.title}</span>`;
-        div.onclick = () => loadChat(chat.id);
-        tabsList.appendChild(div);
-    });
-}
-
-function save() { localStorage.setItem('kwen_chats', JSON.stringify(chats)); }
-
-function formatAIResponse(text) {
-    let formatted = text.replace(/<think>([\s\S]*?)<\/think>/g, (match, p1) => {
-        return `<div class="thought-block">${p1.trim()}</div>`;
-    });
-    return marked.parse(formatted);
-}
-
-async function copyToClipboard(text, btn) {
-    const cleanText = text.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    try {
-        await navigator.clipboard.writeText(cleanText);
-        btn.innerText = "COPIED!";
-        setTimeout(() => btn.innerText = "COPY", 2000);
-    } catch (err) {}
-}
-
-function addBubble(text, isUser, isStreaming = false) {
-    const div = document.createElement('div');
-    div.className = `px-5 py-3 max-w-[85%] shadow-lg ${isUser ? 'user-msg' : 'ai-msg'} ${isStreaming ? 'streaming' : ''}`;
-    
-    if (isUser) {
-        div.textContent = text;
-    } else {
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn';
-        copyBtn.innerText = 'COPY';
-        copyBtn.onclick = () => copyToClipboard(text, copyBtn);
-        
-        div.innerHTML = `<p class="text-blue-400 font-bold text-[10px] mb-1 uppercase tracking-widest">Kwen AI</p>
-                         <div class="markdown-body text-sm">${text ? formatAIResponse(text) : ''}</div>`;
-        div.appendChild(copyBtn);
-    }
-    
-    chatBox.appendChild(div);
-    chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-    return div;
-}
-
-async function sendMessage() {
-    const val = userInput.value.trim(); if (!val) return;
-    
-    const chat = chats.find(c => c.id === currentChatId);
-    if (chat.history.length === 0) { chat.title = val.substring(0, 20); renderTabs(); }
-
-    // BUILD MEMORY PROMPT:
-    // We combine the last 5 messages so Kwen has context.
-    const memory = chat.history.slice(-5).map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join("\n");
-    const fullPrompt = memory ? `${memory}\nUser: ${val}` : val;
-
-    addBubble(val, true);
-    chat.history.push({ role: "user", content: val });
-    userInput.value = '';
-
-    const aiBubble = addBubble("", false, true);
-    const container = aiBubble.querySelector('.markdown-body');
-    const copyBtn = aiBubble.querySelector('.copy-btn');
-
-    try {
-        const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + INTERNAL_KEY },
-            body: JSON.stringify({ prompt: fullPrompt })
-        });
-        if (!res.ok) throw new Error("Failed");
-
-        const reader = res.body.getReader();
-        let full = "";
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            full += new TextDecoder().decode(value);
-            container.innerHTML = formatAIResponse(full);
-            copyBtn.onclick = () => copyToClipboard(full, copyBtn);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-        aiBubble.classList.remove('streaming');
-        chat.history.push({ role: "assistant", content: full });
-        save();
-    } catch (e) {
-        aiBubble.classList.remove('streaming');
-        container.innerHTML = `<span class="text-red-400 font-bold">Error: Kwen disconnected.</span>`;
-    }
-}
-
-document.getElementById('sendBtn').onclick = sendMessage;
-userInput.onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
-init();
-</script>
 </body>
 </html>

@@ -11,125 +11,109 @@
             --accent-box: #1a1a1a;
             --accent-text: #ffffff;
             --border-color: #d1d1d1;
-            --code-bg: #2d2d2d;
+            --code-bg: #1e1e1e;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Courier New', Courier, monospace;
-            margin: 0; padding: 40px; display: flex; justify-content: center;
+            margin: 0; padding: 20px; display: flex; justify-content: center;
         }
 
-        .container { max-width: 800px; width: 100%; }
-        h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 2rem; }
-        h1 strong { font-weight: 900; }
-        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; margin-right: 5px; }
+        .container { max-width: 900px; width: 100%; }
+        h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 1rem; }
+        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; margin-right: 5px; font-size: 0.9rem;}
 
         #chat-window {
-            margin-top: 2rem; height: 500px; overflow-y: auto;
+            margin-top: 1rem; height: 65vh; overflow-y: auto;
             border-top: 1px solid var(--border-color);
-            padding: 20px 0; display: flex; flex-direction: column; gap: 20px;
+            padding: 20px 0; display: flex; flex-direction: column; gap: 15px;
         }
 
-        .message { white-space: pre-wrap; animation: fadeIn 0.3s ease; line-height: 1.5; position: relative; }
-        .kwen-label { font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
+        .message { animation: fadeIn 0.3s ease; line-height: 1.5; font-size: 0.95rem; }
+        .kwen-label { font-weight: bold; color: #666; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.8rem;}
+        .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.8rem;}
 
-        /* The Custom ▋ Cursor */
+        /* --- THINKING BOX --- */
+        .thought-container {
+            border-left: 3px solid #bcbcbc;
+            margin: 8px 0; padding: 5px 12px;
+            background: #dadada; color: #555;
+            font-size: 0.85rem; width: fit-content; max-width: 90%;
+        }
+        .thought-content {
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; white-space: pre-wrap;
+        }
+        .thought-content.expanded { display: block; -webkit-line-clamp: unset; }
+        .show-more-btn {
+            background: none; border: none; color: #000; font-weight: bold;
+            text-decoration: underline; font-family: inherit; cursor: pointer;
+            font-size: 0.75rem; padding: 0; margin-top: 4px;
+        }
+
+        /* --- CODE BLOCKS (SHRINK TO FIT) --- */
+        .code-wrapper { margin: 10px 0; display: block; }
+        .code-container {
+            display: inline-block; /* Makes box only as wide as the code */
+            min-width: 200px; max-width: 100%;
+            background: var(--code-bg); color: #d4d4d4;
+            padding: 25px 15px 10px 15px; border-radius: 4px;
+            position: relative; font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+        pre { margin: 0; white-space: pre; overflow-x: auto; }
+        .copy-btn {
+            position: absolute; top: 5px; right: 5px;
+            background: #444; color: #fff; border: none;
+            padding: 2px 8px; font-size: 0.7rem; cursor: pointer;
+            font-family: inherit; opacity: 0.7;
+        }
+        .copy-btn:hover { opacity: 1; background: #666; }
+
+        /* --- TYPING CURSOR --- */
         .cursor {
             display: inline-block; background-color: var(--text-color);
-            width: 10px; height: 1.2rem; margin-left: 4px;
+            width: 8px; height: 1rem; margin-left: 4px;
             animation: blink 0.8s infinite; vertical-align: middle;
         }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* THINK BOX STYLING */
-        .thought-container {
-            border-left: 2px solid #888;
-            margin: 10px 0;
-            padding-left: 10px;
-            color: #666;
-            font-style: italic;
-            font-size: 0.9rem;
-        }
-        .thought-content {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .thought-content.expanded {
-            display: block;
-            -webkit-line-clamp: unset;
-        }
-        .show-more-btn {
-            background: none;
-            border: none;
-            color: #000;
-            text-decoration: underline;
-            font-family: 'Courier New', Courier, monospace;
-            cursor: pointer;
-            padding: 0;
-            font-size: 0.8rem;
-            margin-top: 5px;
-        }
-
-        /* CODE BOX STYLING */
-        .code-container {
-            background: var(--code-bg);
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;
-            position: relative;
-            font-family: 'Consolas', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
-        }
-        .copy-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #444;
-            color: #fff;
-            border: none;
-            padding: 3px 8px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        .copy-btn:hover { background: #666; }
-
-        .input-area { margin-top: 20px; display: flex; gap: 10px; }
+        /* --- INPUT --- */
+        .input-area { margin-top: 15px; display: flex; gap: 10px; }
         #user-input {
-            flex-grow: 1; background: transparent; border: 1px solid var(--text-color);
-            padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 1rem; outline: none;
+            flex-grow: 1; background: #fff; border: 1px solid var(--text-color);
+            padding: 12px; font-family: inherit; outline: none;
         }
         #send-btn {
             background: var(--accent-box); color: var(--accent-text);
-            border: none; padding: 0 20px; cursor: pointer;
-            font-family: 'Courier New', Courier, monospace; font-weight: bold;
+            border: none; padding: 0 25px; cursor: pointer; font-weight: bold;
         }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Basic Markdown Formatting */
+        strong { font-weight: bold; color: #000; }
+        em { font-style: italic; }
+        ul, ol { margin: 5px 0 10px 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Hello. I'm <strong>Kwen</strong>.</h1>
-    <p><span class="highlight">Kwen Foundation</span><span class="highlight">Status: Online</span></p>
+    <h1><strong>KWEN</strong> FOUNDATION</h1>
+    <p><span class="highlight">4B-REASONING</span><span class="highlight">STATUS: ACTIVE</span></p>
 
     <div id="chat-window">
         <div class="message">
             <span class="kwen-label">Kwen:</span>
-            <span class="content">How can I help you today?</span>
+            <span class="content">System initialized. Code & reasoning blocks optimized.</span>
         </div>
     </div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off">
+        <input type="text" id="user-input" placeholder="Enter command..." autocomplete="off">
         <button id="send-btn">SEND</button>
     </div>
 </div>
@@ -160,14 +144,8 @@
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${DEFAULT_KEY}`
                 },
-                body: JSON.stringify({ 
-                    prompt: text,
-                    max_tokens: 1024,
-                    temperature: 0.6
-                })
+                body: JSON.stringify({ prompt: text, max_tokens: 1024, temperature: 0.6 })
             });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -176,62 +154,55 @@
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                
                 fullText += decoder.decode(value, { stream: true });
-                // Process text to handle think tags and code blocks in real-time
-                contentSpan.innerHTML = formatResponse(fullText) + '<span class="cursor">▋</span>';
+                contentSpan.innerHTML = formatMarkdown(fullText) + '<span class="cursor">▋</span>';
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }
-            // Final render without cursor
-            contentSpan.innerHTML = formatResponse(fullText);
+            contentSpan.innerHTML = formatMarkdown(fullText);
             
         } catch (err) {
-            console.error(err);
-            contentSpan.innerText = "System Error: " + err.message;
+            contentSpan.innerText = "Error: " + err.message;
         }
     }
 
-    function formatResponse(text) {
-        // 1. Handle Think Tags
-        let processed = text.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
-            return `
+    function formatMarkdown(text) {
+        let t = text;
+        // 1. Thinking Blocks
+        t = t.replace(/<think>([\s\S]*?)<\/think>/g, (m, c) => `
             <div class="thought-container">
-                <div class="thought-content">${content}</div>
+                <div class="thought-content">${c.trim()}</div>
                 <button class="show-more-btn" onclick="toggleThought(this)">Show More..</button>
-            </div>`;
-        });
+            </div>`);
 
-        // 2. Handle Code Blocks
-        processed = processed.replace(/```(?:[a-z]*)\n([\s\S]*?)```/g, (match, code) => {
-            const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            return `
-            <div class="code-container">
-                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                <pre><code>${escapedCode}</code></pre>
-            </div>`;
-        });
+        // 2. Code Blocks (Shrink-wrap)
+        t = t.replace(/```(?:[a-z]*)\n([\s\S]*?)```/g, (m, c) => `
+            <div class="code-wrapper">
+                <div class="code-container">
+                    <button class="copy-btn" onclick="copyCode(this)">COPY</button>
+                    <pre><code>${c.replace(/</g, "&lt;").trim()}</code></pre>
+                </div>
+            </div>`);
 
-        return processed;
+        // 3. Bold, Italics, and Lists
+        t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        t = t.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        t = t.replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>');
+        t = t.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+        return t;
     }
 
     function toggleThought(btn) {
         const content = btn.previousElementSibling;
-        if (content.classList.contains('expanded')) {
-            content.classList.remove('expanded');
-            btn.innerText = "Show More..";
-        } else {
-            content.classList.add('expanded');
-            btn.innerText = "Show Less..";
-        }
+        const isExpanded = content.classList.toggle('expanded');
+        btn.innerText = isExpanded ? "Show Less.." : "Show More..";
     }
 
     function copyCode(btn) {
         const code = btn.nextElementSibling.innerText;
-        navigator.clipboard.writeText(code).then(() => {
-            const originalText = btn.innerText;
-            btn.innerText = "Copied!";
-            setTimeout(() => btn.innerText = originalText, 2000);
-        });
+        navigator.clipboard.writeText(code);
+        btn.innerText = "DONE";
+        setTimeout(() => btn.innerText = "COPY", 1500);
     }
 
     function appendMessage(sender, text) {

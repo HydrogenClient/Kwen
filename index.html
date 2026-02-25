@@ -11,6 +11,7 @@
             --accent-box: #1a1a1a;
             --accent-text: #ffffff;
             --border-color: #d1d1d1;
+            --code-bg: #2d2d2d;
         }
 
         body {
@@ -23,7 +24,7 @@
         .container { max-width: 800px; width: 100%; }
         h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 2rem; }
         h1 strong { font-weight: 900; }
-        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; }
+        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; margin-right: 5px; }
 
         #chat-window {
             margin-top: 2rem; height: 500px; overflow-y: auto;
@@ -31,10 +32,11 @@
             padding: 20px 0; display: flex; flex-direction: column; gap: 20px;
         }
 
-        .message { white-space: pre-wrap; animation: fadeIn 0.3s ease; line-height: 1.5; }
+        .message { white-space: pre-wrap; animation: fadeIn 0.3s ease; line-height: 1.5; position: relative; }
         .kwen-label { font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
         .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 4px; }
 
+        /* The Custom ▋ Cursor */
         .cursor {
             display: inline-block; background-color: var(--text-color);
             width: 10px; height: 1.2rem; margin-left: 4px;
@@ -44,12 +46,68 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* THINK BOX STYLING */
+        .thought-container {
+            border-left: 2px solid #888;
+            margin: 10px 0;
+            padding-left: 10px;
+            color: #666;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        .thought-content {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .thought-content.expanded {
+            display: block;
+            -webkit-line-clamp: unset;
+        }
+        .show-more-btn {
+            background: none;
+            border: none;
+            color: #000;
+            text-decoration: underline;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        /* CODE BOX STYLING */
+        .code-container {
+            background: var(--code-bg);
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            position: relative;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #444;
+            color: #fff;
+            border: none;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .copy-btn:hover { background: #666; }
+
         .input-area { margin-top: 20px; display: flex; gap: 10px; }
         #user-input {
             flex-grow: 1; background: transparent; border: 1px solid var(--text-color);
             padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 1rem; outline: none;
         }
-
         #send-btn {
             background: var(--accent-box); color: var(--accent-text);
             border: none; padding: 0 20px; cursor: pointer;
@@ -61,12 +119,12 @@
 
 <div class="container">
     <h1>Hello. I'm <strong>Kwen</strong>.</h1>
-    <p>The <span class="highlight">Kwen Foundation</span><span class="highlight">Status: Online</span></p>
+    <p><span class="highlight">Kwen Foundation</span><span class="highlight">Status: Online</span></p>
 
     <div id="chat-window">
         <div class="message">
             <span class="kwen-label">Kwen:</span>
-            <span>How can I help you today?</span>
+            <span class="content">How can I help you today?</span>
         </div>
     </div>
 
@@ -81,7 +139,6 @@
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
 
-    // CONFIG FROM YOUR BACKEND
     const API_URL = "https://thekwenfoundation-kwen-api.hf.space/v1/chat"; 
     const DEFAULT_KEY = "kwen_NjdT7VQauEyDfzVvPLMIQfwUuduJWT6j";
 
@@ -93,43 +150,88 @@
         userInput.value = "";
         
         const kwenDiv = appendMessage("Kwen", "");
-        const content = kwenDiv.querySelector('.content');
-        content.innerHTML = '<span class="cursor">▋</span>';
+        const contentSpan = kwenDiv.querySelector('.content');
+        contentSpan.innerHTML = '<span class="cursor">▋</span>';
 
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${DEFAULT_KEY}` // Added your internal auth
+                    "Authorization": `Bearer ${DEFAULT_KEY}`
                 },
                 body: JSON.stringify({ 
                     prompt: text,
-                    max_tokens: 512,
+                    max_tokens: 1024,
                     temperature: 0.6
                 })
             });
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-            // HANDLING THE STREAM
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            content.innerText = ""; // Clear cursor to start stream
+            let fullText = "";
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 
-                const chunk = decoder.decode(value, { stream: true });
-                content.innerText += chunk; // Append tokens as they arrive
+                fullText += decoder.decode(value, { stream: true });
+                // Process text to handle think tags and code blocks in real-time
+                contentSpan.innerHTML = formatResponse(fullText) + '<span class="cursor">▋</span>';
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }
+            // Final render without cursor
+            contentSpan.innerHTML = formatResponse(fullText);
             
         } catch (err) {
             console.error(err);
-            content.innerText = "System Error: " + err.message;
+            contentSpan.innerText = "System Error: " + err.message;
         }
+    }
+
+    function formatResponse(text) {
+        // 1. Handle Think Tags
+        let processed = text.replace(/<think>([\s\S]*?)<\/think>/g, (match, content) => {
+            return `
+            <div class="thought-container">
+                <div class="thought-content">${content}</div>
+                <button class="show-more-btn" onclick="toggleThought(this)">Show More..</button>
+            </div>`;
+        });
+
+        // 2. Handle Code Blocks
+        processed = processed.replace(/```(?:[a-z]*)\n([\s\S]*?)```/g, (match, code) => {
+            const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            return `
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                <pre><code>${escapedCode}</code></pre>
+            </div>`;
+        });
+
+        return processed;
+    }
+
+    function toggleThought(btn) {
+        const content = btn.previousElementSibling;
+        if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            btn.innerText = "Show More..";
+        } else {
+            content.classList.add('expanded');
+            btn.innerText = "Show Less..";
+        }
+    }
+
+    function copyCode(btn) {
+        const code = btn.nextElementSibling.innerText;
+        navigator.clipboard.writeText(code).then(() => {
+            const originalText = btn.innerText;
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+        });
     }
 
     function appendMessage(sender, text) {

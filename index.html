@@ -23,7 +23,7 @@
 
         .container { max-width: 900px; width: 100%; }
         h1 { font-weight: normal; font-size: 1.5rem; margin-bottom: 1rem; }
-        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; margin-right: 5px; font-size: 0.9rem;}
+        .highlight { background-color: var(--accent-box); color: var(--accent-text); padding: 2px 6px; font-weight: bold; margin-right: 5px; font-size: 0.8rem;}
 
         #chat-window {
             margin-top: 1rem; height: 65vh; overflow-y: auto;
@@ -31,89 +31,64 @@
             padding: 20px 0; display: flex; flex-direction: column; gap: 15px;
         }
 
-        .message { animation: fadeIn 0.3s ease; line-height: 1.5; font-size: 0.95rem; }
-        .kwen-label { font-weight: bold; color: #666; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.8rem;}
-        .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.8rem;}
+        .message { animation: fadeIn 0.3s ease; line-height: 1.6; font-size: 0.95rem; }
+        .kwen-label { font-weight: bold; color: #666; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.75rem;}
+        .user-label { font-weight: bold; color: #000; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 0.75rem;}
 
-        /* --- THINKING BOX --- */
-        .thought-container {
-            border-left: 3px solid #bcbcbc;
-            margin: 8px 0; padding: 5px 12px;
-            background: #dadada; color: #555;
-            font-size: 0.85rem; width: fit-content; max-width: 90%;
-        }
-        .thought-content {
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; white-space: pre-wrap;
-        }
-        .thought-content.expanded { display: block; -webkit-line-clamp: unset; }
-        .show-more-btn {
-            background: none; border: none; color: #000; font-weight: bold;
-            text-decoration: underline; font-family: inherit; cursor: pointer;
-            font-size: 0.75rem; padding: 0; margin-top: 4px;
-        }
+        /* --- FORMATTING --- */
+        h3 { font-size: 1.1rem; margin: 15px 0 5px 0; border-bottom: 1px solid #ccc; width: fit-content; }
+        code.inline-code { background: #d1d1d1; padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+        ul, ol { margin: 10px 0; padding-left: 25px; }
+        li { margin-bottom: 5px; }
 
-        /* --- CODE BLOCKS (SHRINK TO FIT) --- */
-        .code-wrapper { margin: 10px 0; display: block; }
+        /* --- CODE BLOCKS --- */
+        .code-wrapper { margin: 10px 0; width: 100%; }
         .code-container {
-            display: inline-block; /* Makes box only as wide as the code */
-            min-width: 200px; max-width: 100%;
+            display: inline-block; min-width: 250px; max-width: 100%;
             background: var(--code-bg); color: #d4d4d4;
-            padding: 25px 15px 10px 15px; border-radius: 4px;
-            position: relative; font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.85rem;
+            padding: 30px 15px 12px 15px; border-radius: 4px;
+            position: relative; font-family: 'Consolas', monospace; font-size: 0.85rem;
         }
         pre { margin: 0; white-space: pre; overflow-x: auto; }
         .copy-btn {
-            position: absolute; top: 5px; right: 5px;
+            position: absolute; top: 6px; right: 8px;
             background: #444; color: #fff; border: none;
-            padding: 2px 8px; font-size: 0.7rem; cursor: pointer;
-            font-family: inherit; opacity: 0.7;
-        }
-        .copy-btn:hover { opacity: 1; background: #666; }
-
-        /* --- TYPING CURSOR --- */
-        .cursor {
-            display: inline-block; background-color: var(--text-color);
-            width: 8px; height: 1rem; margin-left: 4px;
-            animation: blink 0.8s infinite; vertical-align: middle;
+            padding: 2px 8px; font-size: 0.65rem; cursor: pointer;
         }
 
-        /* --- INPUT --- */
-        .input-area { margin-top: 15px; display: flex; gap: 10px; }
-        #user-input {
-            flex-grow: 1; background: #fff; border: 1px solid var(--text-color);
-            padding: 12px; font-family: inherit; outline: none;
+        /* --- THINKING --- */
+        .thought-container {
+            border-left: 3px solid #999; margin: 10px 0; padding: 8px 15px;
+            background: #dcdcdc; color: #444; font-size: 0.85rem; width: fit-content; max-width: 95%;
         }
-        #send-btn {
-            background: var(--accent-box); color: var(--accent-text);
-            border: none; padding: 0 25px; cursor: pointer; font-weight: bold;
-        }
+        .thought-content { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .thought-content.expanded { display: block; -webkit-line-clamp: unset; }
+        .show-more-btn { background: none; border: none; text-decoration: underline; cursor: pointer; font-size: 0.7rem; margin-top: 5px; padding: 0; }
 
+        .cursor { display: inline-block; background-color: var(--text-color); width: 8px; height: 1rem; margin-left: 4px; animation: blink 0.8s infinite; vertical-align: middle; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* Basic Markdown Formatting */
-        strong { font-weight: bold; color: #000; }
-        em { font-style: italic; }
-        ul, ol { margin: 5px 0 10px 20px; }
+
+        .input-area { margin-top: 15px; display: flex; gap: 10px; }
+        #user-input { flex-grow: 1; background: #fff; border: 1px solid var(--text-color); padding: 12px; outline: none; font-family: inherit; }
+        #send-btn { background: var(--accent-box); color: var(--accent-text); border: none; padding: 0 25px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1><strong>KWEN</strong> FOUNDATION</h1>
-    <p><span class="highlight">4B-REASONING</span><span class="highlight">STATUS: ACTIVE</span></p>
+    <p><span class="highlight">4B-REASONING</span><span class="highlight">SYSTEM: READY</span></p>
 
     <div id="chat-window">
         <div class="message">
             <span class="kwen-label">Kwen:</span>
-            <span class="content">System initialized. Code & reasoning blocks optimized.</span>
+            <span class="content">Format parsing updated. Headers, inline code, and lists are now supported.</span>
         </div>
     </div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Enter command..." autocomplete="off">
+        <input type="text" id="user-input" placeholder="Ask Kwen..." autocomplete="off">
         <button id="send-btn">SEND</button>
     </div>
 </div>
@@ -129,10 +104,8 @@
     async function handleSend() {
         const text = userInput.value.trim();
         if (!text) return;
-
         appendMessage("User", text);
         userInput.value = "";
-        
         const kwenDiv = appendMessage("Kwen", "");
         const contentSpan = kwenDiv.querySelector('.content');
         contentSpan.innerHTML = '<span class="cursor">▋</span>';
@@ -140,10 +113,7 @@
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${DEFAULT_KEY}`
-                },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${DEFAULT_KEY}` },
                 body: JSON.stringify({ prompt: text, max_tokens: 1024, temperature: 0.6 })
             });
 
@@ -159,7 +129,6 @@
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }
             contentSpan.innerHTML = formatMarkdown(fullText);
-            
         } catch (err) {
             contentSpan.innerText = "Error: " + err.message;
         }
@@ -167,27 +136,26 @@
 
     function formatMarkdown(text) {
         let t = text;
-        // 1. Thinking Blocks
-        t = t.replace(/<think>([\s\S]*?)<\/think>/g, (m, c) => `
-            <div class="thought-container">
-                <div class="thought-content">${c.trim()}</div>
-                <button class="show-more-btn" onclick="toggleThought(this)">Show More..</button>
-            </div>`);
 
-        // 2. Code Blocks (Shrink-wrap)
-        t = t.replace(/```(?:[a-z]*)\n([\s\S]*?)```/g, (m, c) => `
-            <div class="code-wrapper">
-                <div class="code-container">
-                    <button class="copy-btn" onclick="copyCode(this)">COPY</button>
-                    <pre><code>${c.replace(/</g, "&lt;").trim()}</code></pre>
-                </div>
-            </div>`);
+        // 1. Blocks (Think and Code)
+        t = t.replace(/<think>([\s\S]*?)<\/think>/g, (m, c) => `<div class="thought-container"><div class="thought-content">${c.trim()}</div><button class="show-more-btn" onclick="toggleThought(this)">Show More..</button></div>`);
+        t = t.replace(/```(?:[a-z]*)\n([\s\S]*?)```/g, (m, c) => `<div class="code-wrapper"><div class="code-container"><button class="copy-btn" onclick="copyCode(this)">COPY</button><pre><code>${c.replace(/</g, "&lt;").trim()}</code></pre></div></div>`);
 
-        // 3. Bold, Italics, and Lists
+        // 2. Headers (###)
+        t = t.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+
+        // 3. Inline Formatting
+        t = t.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
         t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         t = t.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // 4. Numbered Lists (1. Item)
+        t = t.replace(/^\d+\.\s+(.*)/gm, '<li>$1</li>');
+        t = t.replace(/(<li>.*<\/li>)/s, (m) => `<ol>${m}</ol>`);
+
+        // 5. Bullet Lists (- Item)
         t = t.replace(/^\s*[\-\*]\s+(.*)/gm, '<li>$1</li>');
-        t = t.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        t = t.replace(/(<li>.*<\/li>)/s, (m) => m.includes('ol>') ? m : `<ul>${m}</ul>`);
 
         return t;
     }

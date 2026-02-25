@@ -97,14 +97,13 @@
 <body>
 
 <aside id="sidebar">
-    <button class="new-chat-btn" onclick="startNewChat()">+ NEW INSTRUCTION</button>
+    <button class="new-chat-btn" onclick="startNewChat()">+ NEW CHAT</button>
     <div id="history-list"></div>
 </aside>
 
 <main id="main-content">
     <div class="container">
-        <h1><strong>KWEN</strong>_FOUNDATION</h1>
-        <div><span class="highlight">MOD: 4B_REASON</span><span class="highlight">DB: ACTIVE</span></div>
+        <h1><strong>KWEN</strong</h1>
 
         <div id="chat-window"></div>
 
@@ -128,7 +127,7 @@
 
     function startNewChat() {
         currentChatId = null; // Don't create ID until first message
-        chatWindow.innerHTML = '<div class="message"><span class="kwen-label">Kwen:</span><span>New session ready. Send an instruction to begin.</span></div>';
+        chatWindow.innerHTML = '<div class="message"><span class="kwen-label">Kwen:</span><span>New session ready. Send a message to begin.</span></div>';
         renderHistory();
     }
 
